@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-import argparse, glob, os, sys
+import argparse, glob, os, cPickle, sys
 
 import numpy as np
 import pandas as pd
@@ -9,7 +9,7 @@ sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'ldsc'
 import munge_sumstats
 
 
-def allign_alleles(df):
+def _allign_alleles(df):
     """Look for reversed alleles and inverts the z-score for one of them.
 
     Here, we take advantage of numpy's vectorized functions for performance.
@@ -29,21 +29,7 @@ def allign_alleles(df):
     df['Z_y'] *= -2 * to_flip + 1
 
 
-if __name__ == "__main__":
-    # parse args
-    munge_sumstats.parser.add_argument('sumstats1',
-        help='the first sumstats file')
-    munge_sumstats.parser.add_argument('sumstats2',
-        help='the second sumstats file')
-    munge_sumstats.parser.add_argument('--bimfile', default=None, type=str,
-        required=True, help='bim filename. replace chrosome number with @ if \
-            there are multiple.')
-    munge_sumstats.parser.add_argument('--N1', default=None, type=int,
-        help='N for sumstats1 if there is no N column')
-    munge_sumstats.parser.add_argument('--N2', default=None, type=int,
-        help='N for sumstats2 if there is no N column')
-    args = munge_sumstats.parser.parse_args()
-
+def pre_function():
     # read in bim files
     all_bim_dfs = (pd.read_csv(f,
                                header=0,
@@ -60,7 +46,7 @@ if __name__ == "__main__":
         print '=== MUNGING SUMSTATS FOR {} ==='.format(file)
         args.sumstats = file
         args.N = n
-        dfs.append(munge_sumstats.munge_sumstats(args, p=False))
+        dfs.append(pd.read_csv(file, delim_whitespace=True))
 
     # rename cols
     bim.rename(columns={'A1': 'A1_ref', 'A2': 'A2_ref'}, inplace=True)
@@ -73,8 +59,27 @@ if __name__ == "__main__":
     df = pd.merge(bim, dfs[1], on=['SNP']).merge(dfs[0], on=['SNP'])
 
     # flip sign of z-score for allele reversals
-    allign_alleles(df)
+    _allign_alleles(df)
 
     # take maximum value of N
     df['N_x'] = np.maximum(df['N_x'], 0)
     df['N_y'] = np.maximum(df['N_y'], 0)
+    return df
+    # pickle.dump(df, open('df.p', 'wb'))
+
+
+if __name__ == "__main__":
+    # parse args
+    munge_sumstats.parser.add_argument('sumstats1',
+        help='the first sumstats file')
+    munge_sumstats.parser.add_argument('sumstats2',
+        help='the second sumstats file')
+    munge_sumstats.parser.add_argument('--bimfile', default=None, type=str,
+        required=True, help='bim filename. replace chrosome number with @ if \
+            there are multiple.')
+    munge_sumstats.parser.add_argument('--N1', default=None, type=int,
+        help='N for sumstats1 if there is no N column')
+    munge_sumstats.parser.add_argument('--N2', default=None, type=int,
+        help='N for sumstats2 if there is no N column')
+    args = munge_sumstats.parser.parse_args()
+    df = pre_function(args)
