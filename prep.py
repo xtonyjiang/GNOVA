@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-import argparse, glob, os, cPickle, sys
+import argparse, glob, os, sys
 
 import numpy as np
 import pandas as pd
@@ -46,7 +46,7 @@ def pre_function():
         print '=== MUNGING SUMSTATS FOR {} ==='.format(file)
         args.sumstats = file
         args.N = n
-        dfs.append(pd.read_csv(file, delim_whitespace=True))
+        dfs.append(munge_sumstats.munge_sumstats(args, p=False))
 
     # rename cols
     bim.rename(columns={'A1': 'A1_ref', 'A2': 'A2_ref'}, inplace=True)
