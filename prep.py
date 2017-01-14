@@ -30,6 +30,19 @@ def _allign_alleles(df):
 
 
 def pre_function():
+    munge_sumstats.parser.add_argument('sumstats1',
+        help='the first sumstats file')
+    munge_sumstats.parser.add_argument('sumstats2',
+        help='the second sumstats file')
+    munge_sumstats.parser.add_argument('--bimfile', default=None, type=str,
+        required=True, help='bim filename. replace chrosome number with @ if \
+            there are multiple.')
+    munge_sumstats.parser.add_argument('--N1', default=None, type=int,
+        help='N for sumstats1 if there is no N column')
+    munge_sumstats.parser.add_argument('--N2', default=None, type=int,
+        help='N for sumstats2 if there is no N column')
+
+    args = munge_sumstats.parser.parse_args()
     # read in bim files
     all_bim_dfs = (pd.read_csv(f,
                                header=0,
@@ -39,7 +52,7 @@ def pre_function():
     bim = pd.concat(all_bim_dfs, ignore_index=True)
 
     # call munge_sumstats on the two files
-    args.out = 'dummy'  # we set this because it is required by munge_sumstats,
+    args.out = 'ldsc'  # we set this because it is required by munge_sumstats,
                         # but it is not used for our purposes.
     dfs = []
     for file, n in [(args.sumstats1, args.N1), (args.sumstats2, args.N2)]:
@@ -70,16 +83,4 @@ def pre_function():
 
 if __name__ == "__main__":
     # parse args
-    munge_sumstats.parser.add_argument('sumstats1',
-        help='the first sumstats file')
-    munge_sumstats.parser.add_argument('sumstats2',
-        help='the second sumstats file')
-    munge_sumstats.parser.add_argument('--bimfile', default=None, type=str,
-        required=True, help='bim filename. replace chrosome number with @ if \
-            there are multiple.')
-    munge_sumstats.parser.add_argument('--N1', default=None, type=int,
-        help='N for sumstats1 if there is no N column')
-    munge_sumstats.parser.add_argument('--N2', default=None, type=int,
-        help='N for sumstats2 if there is no N column')
-    args = munge_sumstats.parser.parse_args()
-    df = pre_function(args)
+    df = pre_function()
