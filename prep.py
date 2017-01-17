@@ -29,20 +29,8 @@ def _allign_alleles(df):
     df['Z_y'] *= -2 * to_flip + 1
 
 
-def pre_function():
-    munge_sumstats.parser.add_argument('sumstats1',
-        help='the first sumstats file')
-    munge_sumstats.parser.add_argument('sumstats2',
-        help='the second sumstats file')
-    munge_sumstats.parser.add_argument('--bimfile', default=None, type=str,
-        required=True, help='bim filename. replace chrosome number with @ if \
-            there are multiple.')
-    munge_sumstats.parser.add_argument('--N1', default=None, type=int,
-        help='N for sumstats1 if there is no N column')
-    munge_sumstats.parser.add_argument('--N2', default=None, type=int,
-        help='N for sumstats2 if there is no N column')
-
-    args = munge_sumstats.parser.parse_args()
+def pre_function(args):
+    ms_args = munge_sumstats.parser.parse_args([])
     # read in bim files
     all_bim_dfs = (pd.read_csv(f,
                                header=0,
@@ -52,14 +40,14 @@ def pre_function():
     bim = pd.concat(all_bim_dfs, ignore_index=True)
 
     # call munge_sumstats on the two files
-    args.out = 'ldsc'  # we set this because it is required by munge_sumstats,
-                        # but it is not used for our purposes.
+    ms_args.out = 'ldsc'  # we set this because it is required by munge_sumstats,
+                          # but it is not used for our purposes.
     dfs = []
     for file, n in [(args.sumstats1, args.N1), (args.sumstats2, args.N2)]:
         print '=== MUNGING SUMSTATS FOR {} ==='.format(file)
-        args.sumstats = file
-        args.N = n
-        dfs.append(munge_sumstats.munge_sumstats(args, p=False))
+        ms_args.sumstats = file
+        ms_args.N = n
+        dfs.append(munge_sumstats.munge_sumstats(ms_args, p=False))
 
     # rename cols
     bim.rename(columns={'A1': 'A1_ref', 'A2': 'A2_ref'}, inplace=True)
@@ -78,9 +66,20 @@ def pre_function():
     df['N_x'] = np.maximum(df['N_x'], 0)
     df['N_y'] = np.maximum(df['N_y'], 0)
     return df
-    # pickle.dump(df, open('df.p', 'wb'))
 
 
 if __name__ == "__main__":
     # parse args
-    df = pre_function()
+    parser = argparse.ArgumentParser()
+    parser.add_argument('sumstats1',
+        help='the first sumstats file')
+    parser.add_argument('sumstats2',
+        help='the second sumstats file')
+    parser.add_argument('--bimfile', default=None, type=str, required=True,
+        help='bim filename. replace chrosome number with @ if \
+            there are multiple.')
+    parser.add_argument('--N1', default=None, type=int,
+        help='N for sumstats1 if there is no N column')
+    parser.add_argument('--N2', default=None, type=int,
+        help='N for sumstats2 if there is no N column')
+    df = pre_function(parser.parse_args())
