@@ -132,6 +132,15 @@ def annot_sort_key(s):
 
     return s
 
+def subset_annot_file(a_df, GWAS_df, kept_cols):
+    GWAS_df.loc[:,'idx'] = pd.Series(range(len(GWAS_df.SNP.values)))
+    a_df = pd.merge(a_df, GWAS_df, how="right", on=['SNP'])
+    a_df = a_df.sort_values(['idx'], ascending=True)
+    a_df.drop('idx', axis=1, inplace=True)
+    a_df.rename(columns={'CHR_x':'CHR', 'BP_x':'BP', 'CM_x':'CM'}, inplace=True)
+    a_df = a_df.iloc[:,0:kept_cols]
+    return a_df
+
 def ldscore(args, log):
     '''
     Wrapper function for estimating l1, l1^2, l2 and l4 (+ optionally standard errors) from
@@ -170,16 +179,7 @@ def ldscore(args, log):
             keep_snps = None
             #take only annot SNPs in intersect
             kept_cols = len(annot.df.columns)
-            GWASsnps_df.loc[:,'idx'] = pd.Series(range(len(GWASsnps_df.SNP.values)))
-            annot.df = pd.merge(annot.df, GWASsnps_df, how="right", on=['SNP'], sort=True)
-            print annot.df.head()
-            annot.df = annot.df.sort_values(['idx'], ascending=True)
-            print annot.df.head()
-            annot.df.drop('idx', axis=1, inplace=True)
-            annot.df.rename(columns={'CHR_x':'CHR', 'BP_x':'BP', 'CM_x':'CM'}, inplace=True)
-            print annot.df.head()
-            annot.df = annot.df.iloc[:,0:kept_cols]
-            gwas_ordering = dict(zip(GWASsnps_df.SNP.values, range(len(GWASsnps_df.SNP.values))))
+            annot.df = subset_annot_file(annot.df, GWASsnps_df, kept_cols)
             if np.any(annot.df.SNP.values != GWASsnps_df.SNP.values):
                 raise ValueError('The .annot file must contain all SNPs in the study intersect intersect in the same'+\
                     ' order as the .bim file.')
