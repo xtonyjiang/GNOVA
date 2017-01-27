@@ -16,7 +16,7 @@ import numpy as np
 import pandas as pd
 from subprocess import call
 from itertools import product
-import time, sys, traceback, argparse
+import time, sys, traceback, argparse, glob
 
 try:
     x = pd.DataFrame({'A': [1, 2, 3]})
@@ -160,7 +160,8 @@ def ldscore(args, log):
     log.log('Read list of {m} SNPs from {f}'.format(m=m, f=snp_file))
     if args.annot is not None:  # read --annot
         try:
-            annot = ps.AnnotFile(args.annot)
+            annots = [pd.read_csv(f, delim_whitespace=True) for f in glob.glob(args.annot.replace('@', '*'))]
+            annot = ps.AnnotFile(pd.concat(annots, ignore_index=True))
             n_annot, ma = len(annot.df.columns) - 4, len(annot.df)
             log.log("Read {A} annotations for {M} SNPs from {f}".format(f=args.annot,
                 A=n_annot, M=ma))
@@ -169,9 +170,16 @@ def ldscore(args, log):
             keep_snps = None
             #take only annot SNPs in intersect
             kept_cols = len(annot.df.columns)
-            annot.df = pd.merge(annot.df, GWASsnps_df, how="right", on=['SNP'])
+            GWASsnps_df.loc[:,'idx'] = pd.Series(range(len(GWASsnps_df.SNP.values)))
+            annot.df = pd.merge(annot.df, GWASsnps_df, how="right", on=['SNP'], sort=True)
+            print annot.df.head()
+            annot.df = annot.df.sort_values(['idx'], ascending=True)
+            print annot.df.head()
+            annot.df.drop('idx', axis=1, inplace=True)
             annot.df.rename(columns={'CHR_x':'CHR', 'BP_x':'BP', 'CM_x':'CM'}, inplace=True)
+            print annot.df.head()
             annot.df = annot.df.iloc[:,0:kept_cols]
+            gwas_ordering = dict(zip(GWASsnps_df.SNP.values, range(len(GWASsnps_df.SNP.values))))
             if np.any(annot.df.SNP.values != GWASsnps_df.SNP.values):
                 raise ValueError('The .annot file must contain all SNPs in the study intersect intersect in the same'+\
                     ' order as the .bim file.')
@@ -423,10 +431,10 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
     args.bfile = "/net/zhao/ql68/GeneticCorrelation/simulations/WTCCC/All/Smatrix/ref/chr1"
-    args.annot = "/net/zhao/ql68/GeneticCorrelation/simulations/WTCCC/All/Smatrix/annot/SNPmaf5.1.annot.gz"
+    args.annot = "/net/zhao/ql68/GeneticCorrelation/simulations/WTCCC/All/Smatrix/annot/SNPmaf5.@.annot.gz"
     args.sumstats1 = "/home2/rlp48/sumstat_ref/EduYears_Main.txt"
     args.sumstats2 = "/home2/rlp48/sumstat_ref/IGAP_Data_Complete.txt"
-    args.bimfile = "/net/zhao/ql68/GeneticCorrelation/simulations/WTCCC/All/Smatrix/ref/chr1.bim"
+    args.bimfile = "/net/zhao/ql68/GeneticCorrelation/simulations/WTCCC/All/Smatrix/ref/chr@.bim"
     args.N1 = 293723
     args.N2 = 54162
     args.out = "temp"

@@ -232,7 +232,7 @@ def annot(fh_list, num=None, frqfile=None):
     return x, M_tot
 
 
-def __ID_List_Factory__(colnames, keepcol, fname_end, header=None, usecols=None):
+def __ID_List_Factory__(colnames, keepcol, fname_end, header=None, usecols=None, ):
 
     class IDContainer(object):
 
@@ -246,19 +246,21 @@ def __ID_List_Factory__(colnames, keepcol, fname_end, header=None, usecols=None)
             self.n = len(self.IDList)
 
         def __read__(self, fname):
-            end = self.__fname_end__
-            if end and not fname.endswith(end):
-                raise ValueError('{f} filename must end in {f}'.format(f=end))
+            if isinstance(fname, basestring):
+                end = self.__fname_end__
+                if end and not fname.endswith(end):
+                    raise ValueError('{f} filename must end in {f}'.format(f=end))
 
-            comp = get_compression(fname)
-            self.df = pd.read_csv(fname, header=self.__header__, usecols=self.__usecols__,
+                comp = get_compression(fname)
+                self.df = pd.read_csv(fname, header=self.__header__, usecols=self.__usecols__,
                                   delim_whitespace=True, compression=comp)
 
-            if self.__colnames__:
-                self.df.columns = self.__colnames__
-
+                if self.__colnames__:
+                    self.df.columns = self.__colnames__
+            else:
+                self.df = fname
             self.IDList = self.df.iloc[:, [self.__keepcol__]].astype('object')
-
+        
         def loj(self, externalDf):
             '''Returns indices of those elements of self.IDList that appear in exernalDf.'''
             r = externalDf.columns[0]
