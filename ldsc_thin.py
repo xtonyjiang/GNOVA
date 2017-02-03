@@ -141,6 +141,9 @@ def subset_annot_file(a_df, GWAS_df, kept_cols):
     a_df = a_df.iloc[:,0:kept_cols]
     return a_df
 
+def remove_brackets(x):
+    return x.replace('[', '').replace(']', '').strip()
+
 def ldscore(args, log):
     '''
     Wrapper function for estimating l1, l1^2, l2 and l4 (+ optionally standard errors) from
@@ -262,7 +265,7 @@ def ldscore(args, log):
     if n_annot > 1: # condition number of a column vector w/ nonzero var is trivially one
         log.log('\nLD Score Matrix Condition Number')
         cond_num = np.linalg.cond(df.ix[:,5:])
-        log.log( reg.remove_brackets(str(np.matrix(cond_num))) )
+        log.log(remove_brackets(str(np.matrix(cond_num))))
         if cond_num > 10000:
             log.log('WARNING: ill-conditioned LD Score Matrix!')
 
@@ -426,9 +429,6 @@ parser.add_argument('--frqfile-chr', type=str,
     help='Prefix for --frqfile files split over chromosome.')
 
 if __name__ == '__main__':
-
-
-
     args = parser.parse_args()
     args.bfile = "/net/zhao/ql68/GeneticCorrelation/simulations/WTCCC/All/Smatrix/ref/chr1"
     args.annot = "/net/zhao/ql68/GeneticCorrelation/simulations/WTCCC/All/Smatrix/annot/SNPmaf5.@.annot.gz"
@@ -446,7 +446,7 @@ if __name__ == '__main__':
         LD_matrix = ldscore(args, log)
         print(LD_matrix)
 
-            # bad flags
+    # bad flags
     except Exception:
         ex_type, ex, tb = sys.exc_info()
         log.log( traceback.format_exc(ex) )
