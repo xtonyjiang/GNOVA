@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-import argparse, glob, os, sys
+import argparse, glob, os, re, sys
 
 import numpy as np
 import pandas as pd
@@ -31,16 +31,20 @@ def _allign_alleles(df):
 
 def pre_function(args):
     ms_args = munge_sumstats.parser.parse_args([])
+
     # read in bim files
+    match_chr = '([1-9]|[1]\d|2[0-2])'  # regex to match autosomal chr numbers
+    bim_filenames = [f for f in glob.glob(args.bimfile.replace('@', '*'))
+                     if re.match(args.bimfile.replace('@', match_chr), f)]
     all_bim_dfs = (pd.read_csv(f,
                                header=0,
                                names=['CHR', 'SNP', 'CM', 'BP', 'A1', 'A2'],
                                delim_whitespace=True)
-                   for f in glob.glob(args.bimfile.replace('@', '*')))
+                   for f in bim_filenames)
     bim = pd.concat(all_bim_dfs, ignore_index=True)
 
     # call munge_sumstats on the two files
-    ms_args.out = 'ldsc'  # we set this because it is required by munge_sumstats,
+    ms_args.out = 'ldsc'  # we set this because it is required by munge_sumstats
                           # but it is not used for our purposes.
     dfs = []
     for file, n in [(args.sumstats1, args.N1), (args.sumstats2, args.N2)]:
