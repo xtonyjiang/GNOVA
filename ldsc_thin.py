@@ -144,7 +144,7 @@ def subset_annot_file(a_df, GWAS_df, kept_cols):
 def remove_brackets(x):
     return x.replace('[', '').replace(']', '').strip()
 
-def ldscore(args, log):
+def _ldscore(args, log):
     '''
     Wrapper function for estimating l1, l1^2, l2 and l4 (+ optionally standard errors) from
     reference panel genotypes.
@@ -189,6 +189,9 @@ def ldscore(args, log):
         except Exception:
             log.log('Error parsing .annot file')
             raise
+    else:
+        annot_matrix, annot_colnames, keep_snps = None, None, None,
+        n_annot = 1
 
     keep_snps = __filter_bim__(GWASsnps_df, array_snps)
 
@@ -288,11 +291,26 @@ def ldscore(args, log):
     np.seterr(divide='raise', invalid='raise')
     return df
 
+def ldscore(args, log):
+    df = None
+    if '@' in args.bfile:
+        bim_flag = args.bfile
+        all_dfs = []
+        for i in range(1, 23):
+            args.bfile = bim_flag.replace('@', str(i))
+            all_dfs.append(_ldscore(args, log))
+        df = pd.concat(all_dfs)
+    else:
+        df = _ldscore(args, log)
+
+    numeric = df._get_numeric_data()
+    numeric[numeric < 0] = 0
+    return df
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--out', default='ldsc', type=str,
     help='Output filename prefix. If --out is not set, LDSC will use ldsc as the '
-    'defualt output filename prefix.')
+    'default output filename prefix.')
 # Basic LD Score Estimation Flags'
 parser.add_argument('--bfile', default=None, type=str,
     help='Prefix for Plink .bed/.bim/.fam file')

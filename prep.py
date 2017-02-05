@@ -30,34 +30,41 @@ def _allign_alleles(df):
 
 
 def pre_function(args):
-    ms_args = munge_sumstats.parser.parse_args([])
-
     # read in bim files
-    match_chr = '([1-9]|[1]\d|2[0-2])'  # regex to match autosomal chr numbers
-    bim_filenames = [f for f in glob.glob(args.bimfile.replace('@', '*'))
-                     if re.match(args.bimfile.replace('@', match_chr), f)]
-    all_bim_dfs = (pd.read_csv(f,
-                               header=0,
+    if '@' in args.bimfile:
+        bim_dfs = (pd.read_csv(args.bimfile.replace('@', str(i)),
+                               header=None,
                                names=['CHR', 'SNP', 'CM', 'BP', 'A1', 'A2'],
                                delim_whitespace=True)
-                   for f in bim_filenames)
-    bim = pd.concat(all_bim_dfs, ignore_index=True)
+                   for i in range(1, 23)
+                   if os.path.isfile(args.bimfile.replace('@', str(i))))
+        bim = pd.concat(bim_dfs, ignore_index=True)
+    else:
+        bim = pd.read_csv(args.bimfile,
+                          header=None,
+                          names=['CHR', 'SNP', 'CM', 'BP', 'A1', 'A2'],
+                          delim_whitespace=True)
 
-    # call munge_sumstats on the two files
+    # call munge_sumstats on the two sumstats files
+    dfs = []
+    ms_args = munge_sumstats.parser.parse_args([])
     ms_args.out = 'ldsc'  # we set this because it is required by munge_sumstats
                           # but it is not used for our purposes.
-    dfs = []
-    for file, n in [(args.sumstats1, args.N1), (args.sumstats2, args.N2)]:
-        print '=== MUNGING SUMSTATS FOR {} ==='.format(file)
-        ms_args.sumstats = file
-        ms_args.N = n
-        dfs.append(munge_sumstats.munge_sumstats(ms_args, p=False))
+    for file, n, should_munge in [(args.sumstats1, args.N1, args.munge1),
+                                  (args.sumstats2, args.N2, args.munge2)]:
+        if should_munge:
+            print '=== MUNGING SUMSTATS FOR {} ==='.format(file)
+            ms_args.sumstats = file
+            ms_args.N = n
+            dfs.append(munge_sumstats.munge_sumstats(ms_args, p=False))
+        else:
+            dfs.append(pd.read_csv(file, delim_whitespace=True))
 
     # rename cols
     bim.rename(columns={'A1': 'A1_ref', 'A2': 'A2_ref'}, inplace=True)
-    dfs[0].rename(columns={'A1': 'A1_x', 'A2': 'A2_x', 'N': 'N_x'},
+    dfs[0].rename(columns={'A1': 'A1_x', 'A2': 'A2_x', 'N': 'N_x', 'Z': 'Z_x'},
         inplace=True)
-    dfs[1].rename(columns={'A1': 'A1_y', 'A2': 'A2_y', 'N': 'N_y'},
+    dfs[1].rename(columns={'A1': 'A1_y', 'A2': 'A2_y', 'N': 'N_y', 'Z': 'Z_y'},
         inplace=True)
 
     # take overlap between output and ref genotype files
