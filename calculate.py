@@ -7,22 +7,6 @@ from scipy.stats import norm
 from numpy.linalg import inv
 from itertools import product
 
-
-def _matched_or_reversed(df):
-    d = {'A': 0, 'C': 1, 'G': 2, 'T': 3}
-    a = []  # array of alleles
-    for colname in ['A1_x', 'A2_x', 'A1_y', 'A2_y']:
-        tmp = np.empty(len(df[colname]), dtype=int)
-        for k, v in d.items():
-            tmp[np.array(df[colname]) == k] = v
-        a.append(tmp)
-    matched_alleles = (((a[0] == a[2]) & (a[1] == a[3])) |
-        ((a[0] == 3 - a[2]) | (a[1] == 3 - a[3])))
-    reversed_alleles = (((a[0] == a[3]) & (a[1] == a[2])) |
-        ((a[0] == 3 - a[0]) | (a[1] == 3 - a[2])))
-    return matched_alleles | reversed_alleles
-
-
 def calculate(args):
     ld_scores, gwas_snps = args.LD_matrix, args.GWASsnps
 
@@ -53,7 +37,6 @@ def calculate(args):
                       pd.concat([ld_scores, annot], axis=1),
                       on=['SNP'])
 
-    merged = merged[_matched_or_reversed(merged)]
     ld_scores = merged.iloc[:,14:14 + num_annotations]
     annot = merged.iloc[:,14 + num_annotations: 14 + 2 * num_annotations]
 

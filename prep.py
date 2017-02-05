@@ -9,7 +9,7 @@ sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'ldsc'
 import munge_sumstats
 
 
-def _allign_alleles(df):
+def allign_alleles(df):
     """Look for reversed alleles and inverts the z-score for one of them.
 
     Here, we take advantage of numpy's vectorized functions for performance.
@@ -27,6 +27,24 @@ def _allign_alleles(df):
         alleles[1] == 3 - alleles[2])
     to_flip = np.logical_or(reversed_alleles, reversed_strand_flip_alleles)
     df['Z_y'] *= -2 * to_flip + 1
+
+
+def matched_or_reversed(df):
+    """Returns boolean array signifying whether rows have matched or reversed
+    alleles.
+    """
+    d = {'A': 0, 'C': 1, 'G': 2, 'T': 3}
+    a = []  # array of alleles
+    for colname in ['A1_x', 'A2_x', 'A1_y', 'A2_y']:
+        tmp = np.empty(len(df[colname]), dtype=int)
+        for k, v in d.items():
+            tmp[np.array(df[colname]) == k] = v
+        a.append(tmp)
+    matched_alleles = (((a[0] == a[2]) & (a[1] == a[3])) |
+        ((a[0] == 3 - a[2]) | (a[1] == 3 - a[3])))
+    reversed_alleles = (((a[0] == a[3]) & (a[1] == a[2])) |
+        ((a[0] == 3 - a[0]) | (a[1] == 3 - a[2])))
+    return matched_alleles | reversed_alleles
 
 
 def pre_function(args):
@@ -71,7 +89,8 @@ def pre_function(args):
     df = pd.merge(bim, dfs[1], on=['SNP']).merge(dfs[0], on=['SNP'])
 
     # flip sign of z-score for allele reversals
-    _allign_alleles(df)
+    allign_alleles(df)
+    df = df[matched_or_reversed(df)]
 
     # take maximum value of N
     df['N_x'] = np.maximum(df['N_x'], 0)
