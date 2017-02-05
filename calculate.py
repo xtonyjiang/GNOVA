@@ -37,8 +37,8 @@ def calculate(args):
                       pd.concat([ld_scores, annot], axis=1),
                       on=['SNP'])
 
-    ld_scores = merged.iloc[:,14:14 + num_annotations]
-    annot = merged.iloc[:,14 + num_annotations: 14 + 2 * num_annotations]
+    ld_scores = merged.iloc[:,6:6 + num_annotations]
+    annot = merged.iloc[:,6 + num_annotations: 6 + 2 * num_annotations]
 
     # Calculate W matrix
     W = np.empty([num_annotations, num_annotations])

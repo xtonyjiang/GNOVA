@@ -95,7 +95,8 @@ def pre_function(args):
     # take maximum value of N
     df['N_x'] = np.maximum(df['N_x'], 0)
     df['N_y'] = np.maximum(df['N_y'], 0)
-    return df
+
+    return df[['CHR', 'SNP', 'N_x', 'Z_x', 'N_y', 'Z_y']]
 
 
 if __name__ == "__main__":
