@@ -1,11 +1,11 @@
 #!/usr/bin/python
 from __future__ import division
+from itertools import product
 import numpy as np
 import pandas as pd
 from sklearn import linear_model
 from scipy.stats import norm
 from numpy.linalg import inv
-from itertools import product
 
 def calculate(args):
     ld_scores, gwas_snps = args.LD_matrix, args.GWASsnps
@@ -61,13 +61,17 @@ def calculate(args):
         h2_1 = np.dot(W, m1.coef_.T * pd.DataFrame(P) / N1)
         h2_2 = np.dot(W, m2.coef_.T * pd.DataFrame(P) / N2)
 
-    # w1 = 1 + p0 * (np.mean(merged['Z_x'] ** 2) - 1) / np.mean(ld_score_all) * ld_score_all / len(ld_score_all)
-    # w2 = 1 + p0 * (np.mean(merged['Z_y'] ** 2) - 1) / np.mean(ld_score_all) * ld_score_all / len(ld_score_all)
-    # w3 = np.mean(merged['Z_x'] * merged['Z_y']) * ld_score_all
-    # w = 1 / (w1 * w2 + w3 * w3)
-    # m = linear_model.LinearRegression().fit(pd.DataFrame(ld_score_all), pd.DataFrame(merged['Z_x'] * merged['Z_y']), sample_weight=w)
-    # corr_pheno = m.intercept_[0]
-    corr_pheno = 0
+    if args.annot is None:
+        w1 = 1 + N1 * h2_1 * ld_score_all / len(ld_score_all)
+        w2 = 1 + N2 * h2_2 * ld_score_all / len(ld_score_all)
+    else:
+        w1 = 1 + p0 * (np.mean(merged['Z_x'] ** 2) - 1) / np.mean(ld_score_all) * ld_score_all / len(ld_score_all)
+        w2 = 1 + p0 * (np.mean(merged['Z_y'] ** 2) - 1) / np.mean(ld_score_all) * ld_score_all / len(ld_score_all)
+
+    w3 = np.mean(merged['Z_x'] * merged['Z_y']) * ld_score_all
+    w = 1 / (w1 * w2 + w3 * w3)
+    m = linear_model.LinearRegression().fit(pd.DataFrame(ld_score_all), pd.DataFrame(merged['Z_x'] * merged['Z_y']), sample_weight=w)
+    corr_pheno = m.intercept_[0]
 
     # Jackknife variance estimate
     nblock = 200
@@ -85,14 +89,17 @@ def calculate(args):
 
     # rho
     rho = W.dot(inv(S)).dot(q)
+    rho_corrected = W.dot(inv(S)).dot(q - corr_pheno / ((N1 * N2) ** 0.5))
 
     # covariance of rho
     cov_rho = W.dot(inv(S)).dot(cov_q).dot(inv(S)).dot(W.T)
 
     # genetic correlation
     corr = rho / ((h2_1 * h2_2) ** 0.5).T
+    corr_corrected = rho_corrected / ((h2_1 * h2_2) ** 0.5).T
 
     # p-value
     p_value = norm.sf(abs(rho / (cov_rho.diagonal() ** 0.5))) * 2
+    p_value_corrected = norm.sf(abs(rho_corrected / (cov_rho.diagonal() ** 0.5))) * 2
 
-    return rho, p_value, cov_rho, corr, h2_1, h2_2, p0
+    return rho, rho_corrected, p_value, p_value_corrected cov_rho, corr, corr_corrected, h2_1, h2_2, p0
