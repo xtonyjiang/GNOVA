@@ -184,7 +184,7 @@ def _ldscore(args, log):
             kept_cols = len(annot.df.columns)
             annot.df = subset_annot_file(annot.df, GWASsnps_df, kept_cols)
             if np.any(annot.df.SNP.values != GWASsnps_df.SNP.values):
-                raise ValueError('The .annot file must contain all SNPs in the study intersect intersect in the same'+\
+                raise ValueError('The .annot file must contain all SNPs in the study intersect in the same'+\
                     ' order as the .bim file.')
         except Exception:
             log.log('Error parsing .annot file')
@@ -211,12 +211,7 @@ def _ldscore(args, log):
     geno_array = array_obj(array_file, n, array_snps, keep_snps=keep_snps,
         keep_indivs=keep_indivs, mafMin=args.maf)
 
-    # filter annot_matrix down to only SNPs passing MAF cutoffs
-    if annot_matrix is not None:
-        annot_keep = geno_array.kept_snps
-        annot_matrix = annot_matrix[annot_keep,:]
-
-    # determine block widths
+    #determine block widths
 
     max_dist = args.ld_wind_cm
     coords = np.array(array_snps.df['CM'])[geno_array.kept_snps]
@@ -448,13 +443,16 @@ parser.add_argument('--frqfile-chr', type=str,
 
 if __name__ == '__main__':
     args = parser.parse_args()
-    args.bfile = "/net/zhao/ql68/GeneticCorrelation/simulations/WTCCC/All/Smatrix/ref/chr1"
-    args.annot = "/net/zhao/ql68/GeneticCorrelation/simulations/WTCCC/All/Smatrix/annot/SNPmaf5.@.annot.gz"
-    args.sumstats1 = "/home2/rlp48/sumstat_ref/EduYears_Main.txt"
-    args.sumstats2 = "/home2/rlp48/sumstat_ref/IGAP_Data_Complete.txt"
-    args.bimfile = "/net/zhao/ql68/GeneticCorrelation/simulations/WTCCC/All/Smatrix/ref/chr@.bim"
-    args.N1 = 293723
-    args.N2 = 54162
+    args.bfile = "/net/zhao/ql68/GeneticCorrelation/1000G/EUR/eur_chr1"
+    args.bfile = "/net/zhao/ql68/GeneticCorrelation/1000G/EUR/eur_chr1_SNPmaf5"
+    args.annot = "/net/zhao/ql68/GeneticCorrelation/realdata/CD_UC/All_SNPmaf5/tmpFiles/SNPmaf5.1.annot.gz"
+    args.sumstats1 = "/net/zhao/ql68/GeneticCorrelation/sumstats/CD.sumstats.gz"
+    args.sumstats2 = "/net/zhao/ql68/GeneticCorrelation/sumstats/UC.sumstats.gz"
+    args.bimfile = "/net/zhao/ql68/GeneticCorrelation/1000G/EUR/eur_chr1_SNPmaf5.bim"
+    args.munge1 = False
+    args.munge2 = False
+    args.N1 = 27726
+    args.N2 = 28738
     args.out = "temp"
 
     args.ld_wind_cm = 1
