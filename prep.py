@@ -107,7 +107,7 @@ if __name__ == "__main__":
     parser.add_argument('sumstats2',
         help='the second sumstats file')
     parser.add_argument('--bimfile', default=None, type=str, required=True,
-        help='bim filename. replace chrosome number with @ if \
+        help='bim filename. replace chromosome number with @ if \
             there are multiple.')
     parser.add_argument('--N1', default=None, type=int,
         help='N for sumstats1 if there is no N column')

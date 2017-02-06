@@ -290,9 +290,11 @@ def ldscore(args, log):
     df = None
     if '@' in args.bfile:
         bim_flag = args.bfile
+        annot_flag = args.annot
         all_dfs = []
         for i in range(1, 23):
             args.bfile = bim_flag.replace('@', str(i))
+            args.annot = annot_flag.replace('@', str(i))
             all_dfs.append(_ldscore(args, log))
         df = pd.concat(all_dfs)
     else:
@@ -443,7 +445,6 @@ parser.add_argument('--frqfile-chr', type=str,
 
 if __name__ == '__main__':
     args = parser.parse_args()
-    args.bfile = "/net/zhao/ql68/GeneticCorrelation/1000G/EUR/eur_chr1"
     args.bfile = "/net/zhao/ql68/GeneticCorrelation/1000G/EUR/eur_chr1_SNPmaf5"
     args.annot = "/net/zhao/ql68/GeneticCorrelation/realdata/CD_UC/All_SNPmaf5/tmpFiles/SNPmaf5.1.annot.gz"
     args.sumstats1 = "/net/zhao/ql68/GeneticCorrelation/sumstats/CD.sumstats.gz"
