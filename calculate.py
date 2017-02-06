@@ -56,11 +56,14 @@ def calculate(args):
         tau2 = (np.mean((merged['Z_y']) ** 2) - 1)/(N2 * np.mean(ld_score_all))
         w1 = 1 /(ld_score_all * (1 + N1 * tau1 * ld_score_all) ** 2)
         w2 = 1 /(ld_score_all * (1 + N2 * tau2 * ld_score_all) ** 2)
+        w1[w1 < 0] = 0
+        w2[w2 < 0] = 0
         m1 = linear_model.LinearRegression().fit(ld_scores, pd.DataFrame((merged['Z_x']) ** 2), sample_weight=w1)
         m2 = linear_model.LinearRegression().fit(ld_scores, pd.DataFrame((merged['Z_y']) ** 2), sample_weight=w2)
         h2_1 = np.dot(W, m1.coef_.T * pd.DataFrame(P) / N1)
         h2_2 = np.dot(W, m2.coef_.T * pd.DataFrame(P) / N2)
 
+    # Sample overlap correction
     if args.annot is None:
         w1 = 1 + N1 * h2_1 * ld_score_all / len(ld_score_all)
         w2 = 1 + N2 * h2_2 * ld_score_all / len(ld_score_all)
@@ -84,7 +87,7 @@ def calculate(args):
         for j, (b_x, b_y) in enumerate(zip(np.array_split(df_x, nblock), np.array_split(df_y, nblock))):
             q_block[i][j] = (tot - np.dot(b_x, b_y)) / ((len(df_x) - len(b_x) - corr_pheno) * ((N1 * N2) ** 0.5))
 
-    q = np.mean(q_block)
+    q = np.mean(q_block, axis=1)
     cov_q = np.cov(q_block, bias=True) * (nblock - 1)
 
     # rho
@@ -102,4 +105,4 @@ def calculate(args):
     p_value = norm.sf(abs(rho / (cov_rho.diagonal() ** 0.5))) * 2
     p_value_corrected = norm.sf(abs(rho_corrected / (cov_rho.diagonal() ** 0.5))) * 2
 
-    return rho, rho_corrected, p_value, p_value_corrected cov_rho, corr, corr_corrected, h2_1, h2_2, p0
+    return rho, rho_corrected, p_value, p_value_corrected, cov_rho, corr, corr_corrected, h2_1, h2_2, p0
