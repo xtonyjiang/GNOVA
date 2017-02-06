@@ -293,6 +293,7 @@ def ldscore(args, log):
         annot_flag = args.annot
         all_dfs = []
         for i in range(1, 23):
+            print '=== COMPUTING LD SCORES FOR CHR {} ==='.format(i)
             args.bfile = bim_flag.replace('@', str(i))
             args.annot = annot_flag.replace('@', str(i))
             all_dfs.append(_ldscore(args, log))
