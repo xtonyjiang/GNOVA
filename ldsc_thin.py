@@ -157,9 +157,6 @@ def _ldscore(args, log):
     #args = set_defaults(args)
     if args.n_blocks <= 1:
         raise ValueError('--n-blocks must be an integer > 1.')
-    if args.bfile is not None:
-        if args.l2 is None:
-            raise ValueError('Must specify --l2 with --bfile.')
     if args.bfile:
         snp_file, snp_obj = args.bfile+'.bim', ps.PlinkBIMFile
         ind_file, ind_obj = args.bfile+'.fam', ps.PlinkFAMFile
@@ -289,14 +286,16 @@ def _ldscore(args, log):
 def ldscore(args, log):
     df = None
     if '@' in args.bfile:
-        bim_flag = args.bfile
+        b_flag = args.bfile
         annot_flag = args.annot
         all_dfs = []
         for i in range(1, 23):
-            print '=== COMPUTING LD SCORES FOR CHR {} ==='.format(i)
-            args.bfile = bim_flag.replace('@', str(i))
+            print '=== COMPUTING LD SCORES FOR CHROMOSOME {} ==='.format(i)
+            args.bfile = b_flag.replace('@', str(i))
             args.annot = annot_flag.replace('@', str(i))
             all_dfs.append(_ldscore(args, log))
+        args.bfile = bim_flag
+        args.annot= annot_flag
         df = pd.concat(all_dfs)
     else:
         df = _ldscore(args, log)
@@ -312,8 +311,6 @@ parser.add_argument('--out', default='ldsc', type=str,
 # Basic LD Score Estimation Flags'
 parser.add_argument('--bfile', default=None, type=str,
     help='Prefix for Plink .bed/.bim/.fam file')
-parser.add_argument('--l2', default=False, action='store_true',
-    help='Estimate l2. Compatible with both jackknife and non-jackknife.')
 # Filtering / Data Management for LD Score
 parser.add_argument('--extract', default=None, type=str,
     help='File with SNPs to include in LD Score estimation. '
@@ -321,20 +318,9 @@ parser.add_argument('--extract', default=None, type=str,
 parser.add_argument('--keep', default=None, type=str,
     help='File with individuals to include in LD Score estimation. '
     'The file should contain one individual ID per row.')
-parser.add_argument('--ld-wind-snps', default=None, type=int,
-    help='Specify the window size to be used for estimating LD Scores in units of '
-    '# of SNPs. You can only specify one --ld-wind-* option.')
-parser.add_argument('--ld-wind-kb', default=None, type=float,
-    help='Specify the window size to be used for estimating LD Scores in units of '
-    'kilobase-pairs (kb). You can only specify one --ld-wind-* option.')
 parser.add_argument('--ld-wind-cm', default=None, type=float,
     help='Specify the window size to be used for estimating LD Scores in units of '
     'centiMorgans (cM). You can only specify one --ld-wind-* option.')
-parser.add_argument('--print-snps', default=None, type=str,
-    help='This flag tells LDSC to only print LD Scores for the SNPs listed '
-    '(one ID per row) in PRINT_SNPS. The sum r^2 will still include SNPs not in '
-    'PRINT_SNPs. This is useful for reducing the number of LD Scores that have to be '
-    'read into memory when estimating h2 or rg.' )
 # Fancy LD Score Estimation Flags
 parser.add_argument('--annot', default=None, type=str,
     help='Filename prefix for annotation file for partitioned LD Score estimation. '
@@ -346,103 +332,19 @@ parser.add_argument('--cts-bin', default=None, type=str,
     'The argument to this flag should be the name of a single file or a comma-separated '
     'list of files. The file format is two columns, with SNP IDs in the first column '
     'and the continuous variable in the second column. ')
-parser.add_argument('--cts-breaks', default=None, type=str,
-    help='Use this flag to specify names for the continuous variables cut into bins '
-    'with --cts-bin. For each continuous variable, specify breaks as a comma-separated '
-    'list of breakpoints, and separate the breakpoints for each variable with an x. '
-    'For example, if binning on MAF and distance to gene (in kb), '
-    'you might set --cts-breaks 0.1,0.25,0.4x10,100,1000 ')
-parser.add_argument('--cts-names', default=None, type=str,
-    help='Use this flag to specify names for the continuous variables cut into bins '
-    'with --cts-bin. The argument to this flag should be a comma-separated list of '
-    'names. For example, if binning on DAF and distance to gene, you might set '
-    '--cts-bin DAF,DIST_TO_GENE ')
-parser.add_argument('--per-allele', default=False, action='store_true',
-    help='Setting this flag causes LDSC to compute per-allele LD Scores, '
-    'i.e., \ell_j := \sum_k p_k(1-p_k)r^2_{jk}, where p_k denotes the MAF '
-    'of SNP j. ')
-parser.add_argument('--pq-exp', default=None, type=float,
-    help='Setting this flag causes LDSC to compute LD Scores with the given scale factor, '
-    'i.e., \ell_j := \sum_k (p_k(1-p_k))^a r^2_{jk}, where p_k denotes the MAF '
-    'of SNP j and a is the argument to --pq-exp. ')
 parser.add_argument('--no-print-annot', default=False, action='store_true',
     help='By defualt, seting --cts-bin or --cts-bin-add causes LDSC to print '
     'the resulting annot matrix. Setting --no-print-annot tells LDSC not '
     'to print the annot matrix. ')
 parser.add_argument('--maf', default=None, type=float,
     help='Minor allele frequency lower bound. Default is MAF > 0.')
-# Basic Flags for Working with Variance Components
-parser.add_argument('--h2', default=None, type=str,
-    help='Filename prefix for a .chisq file for one-phenotype LD Score regression. '
-    'LDSC will automatically append .chisq or .chisq.gz to the filename prefix.'
-    '--h2 requires at minimum also setting the --ref-ld and --w-ld flags.')
-parser.add_argument('--rg', default=None, type=str,
-    help='Comma-separated list of prefixes of .chisq filed for genetic correlation estimation.')
-parser.add_argument('--ref-ld', default=None, type=str,
-    help='Use --ref-ld to tell LDSC which LD Scores to use as the predictors in the LD '
-    'Score regression. '
-    'LDSC will automatically append .l2.ldscore/.l2.ldscore.gz to the filename prefix.')
-parser.add_argument('--ref-ld-chr', default=None, type=str,
-    help='Same as --ref-ld, but will automatically concatenate .l2.ldscore files split '
-    'across 22 chromosomes. LDSC will automatically append .l2.ldscore/.l2.ldscore.gz '
-    'to the filename prefix. If the filename prefix contains the symbol @, LDSC will '
-    'replace the @ symbol with chromosome numbers. Otherwise, LDSC will append chromosome '
-    'numbers to the end of the filename prefix.'
-    'Example 1: --ref-ld-chr ld/ will read ld/1.l2.ldscore.gz ... ld/22.l2.ldscore.gz'
-    'Example 2: --ref-ld-chr ld/@_kg will read ld/1_kg.l2.ldscore.gz ... ld/22_kg.l2.ldscore.gz')
-parser.add_argument('--w-ld', default=None, type=str,
-    help='Filename prefix for file with LD Scores with sum r^2 taken over SNPs included '
-    'in the regression. LDSC will automatically append .l2.ldscore/.l2.ldscore.gz.')
-parser.add_argument('--w-ld-chr', default=None, type=str,
-    help='Same as --w-ld, but will read files split into 22 chromosomes in the same '
-    'manner as --ref-ld-chr.')
-parser.add_argument('--overlap-annot', default=False, action='store_true',
-    help='This flag informs LDSC that the partitioned LD Scores were generates using an '
-    'annot matrix with overlapping categories (i.e., not all row sums equal 1), '
-    'and prevents LDSC from displaying output that is meaningless with overlapping categories.')
-parser.add_argument('--no-intercept', action='store_true',
-    help = 'If used with --h2, this constrains the LD Score regression intercept to equal '
-    '1. If used with --rg, this constrains the LD Score regression intercepts for the h2 '
-    'estimates to be one and the intercept for the genetic covariance estimate to be zero.')
-parser.add_argument('--intercept-h2', action='store', default=None,
-    help = 'Intercepts for constrained-intercept single-trait LD Score regression.')
-parser.add_argument('--intercept-gencov', action='store', default=None,
-    help = 'Intercepts for constrained-intercept cross-trait LD Score regression.'
-    ' Must have same length as --rg. The first entry is ignored.')
-parser.add_argument('--M', default=None, type=str,
-    help='# of SNPs (if you don\'t want to use the .l2.M files that came with your .l2.ldscore.gz files)')
-parser.add_argument('--two-step', default=None, type=float,
-    help='Test statistic bound for use with the two-step estimator. Not compatible with --no-intercept and --constrain-intercept.')
-parser.add_argument('--chisq-max', default=None, type=float,
-    help='Max chi^2.')
 
 # Flags for both LD Score estimation and h2/gencor estimation
 # Flags you should almost never use
 parser.add_argument('--chunk-size', default=50, type=int,
     help='Chunk size for LD Score calculation. Use the default.')
-parser.add_argument('--pickle', default=False, action='store_true',
-    help='Store .l2.ldscore files as pickles instead of gzipped tab-delimited text.')
-parser.add_argument('--yes-really', default=False, action='store_true',
-    help='Yes, I really want to compute whole-chromosome LD Score.')
-parser.add_argument('--invert-anyway', default=False, action='store_true',
-    help="Force LDSC to attempt to invert ill-conditioned matrices.")
 parser.add_argument('--n-blocks', default=200, type=int,
     help='Number of block jackknife blocks.')
-parser.add_argument('--not-M-5-50', default=False, action='store_true',
-    help='This flag tells LDSC to use the .l2.M file instead of the .l2.M_5_50 file.')
-parser.add_argument('--return-silly-things', default=False, action='store_true',
-    help='Force ldsc to return silly genetic correlation estimates.')
-parser.add_argument('--no-check-alleles', default=False, action='store_true',
-    help='For rg estimation, skip checking whether the alleles match. This check is '
-    'redundant for pairs of chisq files generated using munge_sumstats.py and the '
-    'same argument to the --merge-alleles flag.')
-parser.add_argument('--print-coefficients',default=False,action='store_true',
-    help='when categories are overlapping, print coefficients as well as heritabilities.')
-parser.add_argument('--frqfile', type=str,
-    help='For use with --overlap-annot. Provides allele frequencies to prune to common '
-    'snps if --not-M-5-50 is not set.')
-parser.add_argument('--frqfile-chr', type=str,
-    help='Prefix for --frqfile files split over chromosome.')
 
 if __name__ == '__main__':
     args = parser.parse_args()
