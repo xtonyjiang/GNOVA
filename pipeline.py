@@ -1,4 +1,4 @@
-import argparse
+import argparse, collections
 from prep import prep
 from ldsc_thin import ldscore
 from calculate import calculate
@@ -7,16 +7,27 @@ import pandas as pd
 def pipeline(args):
     pd.options.mode.chained_assignment = None
     gwas_snps, N1, N2, annots = prep(args.bfile,
-                                args.annot,
-                                args.sumstats1,
-                                args.already_munged1,
-                                args.N1,
-                                args.sumstats2,
-                                args.already_munged2,
-                                args.N2)
+                                     args.annot,
+                                     args.sumstats1,
+                                     args.already_munged1,
+                                     args.N1,
+                                     args.sumstats2,
+                                     args.already_munged2,
+                                     args.N2)
     ld_scores = ldscore(args.bfile, annots, gwas_snps)
     results = calculate(gwas_snps, ld_scores, annots, N1, N2)
-    print(results)
+    results_to_print = collections.OrderedDict(
+        [('rho', results['rho_corrected']),
+         ('pvalue', results['p_value_corrected']),
+         ('corr', results['corr_corrected']),
+         ('h2_1', results['h2_1']),
+         ('h2_2', results['h2_2']),
+         ('p0', results['p0'])
+        ]
+    )
+    out = pd.DataFrame(results_to_print)
+    print('Final results: {}\n'.format(out))
+    out.to_csv(args.out, sep=' ', index=False)
 
 
 parser = argparse.ArgumentParser()
@@ -45,8 +56,8 @@ parser.add_argument('--annot', type=str,
     'LDSC will automatically append .annot or .annot.gz to the filename prefix. '
     'See docs/file_formats_ld for a definition of the .annot format.')
 
-# parser.add_argument('--out', required=True, type=str,
-#     help='Location to output results.')
+parser.add_argument('--out', required=True, type=str,
+    help='Location to output results.')
 
 
 if __name__ == '__main__':
