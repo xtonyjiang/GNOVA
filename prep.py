@@ -66,8 +66,9 @@ def get_files(file_name):
 
 
 def prep(bfile, annot, sumstats1, already_munged1, N1, sumstats2, already_munged2, N2):
+    bim_files = get_files(bfile + '.bim')
+
     if annot is not None:
-        bim_files = get_files(bfile + '.bim')
         annot_files = get_files(annot)
         len_b, len_a = len(bim_files), len(annot_files)
         if len_b != len_a and len_b > 1 and len_a > 1:

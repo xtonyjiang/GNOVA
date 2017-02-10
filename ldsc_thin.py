@@ -263,7 +263,12 @@ def ldscore(bfile, annots, gwas_snps):
         for i in range(1, 23):
             print '=== COMPUTING LD SCORES FOR CHROMOSOME {} ==='.format(i)
             cur_bfile = bfile.replace('@', str(i))
-            cur_annot = [annots[i - 1]] if len(annots) > 1 else annots
+            if annots is None:
+                cur_annot = None
+            elif len(annots) > 1:
+                cur_annot = [annots[i - 1]]
+            else:
+                cur_annot = annots
             all_dfs.append(_ldscore(cur_bfile, cur_annot, gwas_snps))
         df = pd.concat(all_dfs)
     else:

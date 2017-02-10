@@ -29,9 +29,9 @@ def calculate(gwas_snps, ld_scores, annots, N1, N2):
                       on=['SNP'])
 
     ld_score_all = merged.iloc[:,4]
-    if len(annot.columns) == 2:  # non-stratified analysis
-        ld_scores = merged.iloc[:,4]
-        annot = merged.iloc[:,5]
+    if num_annotations == 1:  # non-stratified analysis
+        ld_scores = merged.iloc[:,4:5]
+        annot = merged.iloc[:,5:6]
 
     else:  # we added in an all 1's column in prep step, so exclude that
         ld_scores = merged.iloc[:,5:4 + num_annotations]
@@ -52,7 +52,7 @@ def calculate(gwas_snps, ld_scores, annots, N1, N2):
         W[i][j] = np.sum((annot.iloc[:,i]==1) & (annot.iloc[:,j]==1)) / np.sum(annot.iloc[:,j] == 1)
 
     # Calculate heritability
-    if annot is None:
+    if annots is None:
         h2_1 = p0 * (np.mean(merged['Z_x'] ** 2) - 1) / (N1 * np.mean(ld_score_all))
         h2_2 = p0 * (np.mean(merged['Z_y'] ** 2) - 1) / (N2 * np.mean(ld_score_all))
     else:
@@ -68,7 +68,7 @@ def calculate(gwas_snps, ld_scores, annots, N1, N2):
         h2_2 = np.dot(W, m2.coef_.T * pd.DataFrame(P) / N2)
 
     # Calculate sample overlap correction
-    if annot is None:
+    if annots is None:
         w1 = 1 + N1 * h2_1 * ld_score_all / len(ld_score_all)
         w2 = 1 + N2 * h2_2 * ld_score_all / len(ld_score_all)
     else:
@@ -117,7 +117,7 @@ def calculate(gwas_snps, ld_scores, annots, N1, N2):
                 'var_rho': cov_rho.diagonal(),
                 'corr': corr[0],
                 'corr_corrected': corr_corrected[0],
-                'h2_1': h2_1.T[0],
-                'h2_2': h2_2.T[0],
+                'h2_1': h2_1,
+                'h2_2': h2_2,
                 'p0': p0
            }

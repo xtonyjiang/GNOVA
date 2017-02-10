@@ -40,7 +40,7 @@ parser.add_argument('--N2', default=None, type=int,
 
 parser.add_argument('--bfile', required=True, type=str,
     help='Prefix for Plink .bed/.bim/.fam file.')
-parser.add_argument('--annot', required=True, type=str,
+parser.add_argument('--annot', type=str,
     help='Filename prefix for annotation file for partitioned LD Score estimation. '
     'LDSC will automatically append .annot or .annot.gz to the filename prefix. '
     'See docs/file_formats_ld for a definition of the .annot format.')
