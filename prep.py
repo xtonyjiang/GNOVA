@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-import argparse, glob, os, re, sys
+import os, sys
 
 import numpy as np
 import pandas as pd
@@ -47,31 +47,64 @@ def matched_or_reversed(df):
     return matched_alleles | reversed_alleles
 
 
-def pre_function(args):
-    # read in bim files
-    if '@' in args.bimfile:
-        bim_dfs = (pd.read_csv(args.bimfile.replace('@', str(i)),
-                               header=None,
-                               names=['CHR', 'SNP', 'CM', 'BP', 'A1', 'A2'],
-                               delim_whitespace=True)
-                   for i in range(1, 23)
-                   if os.path.isfile(args.bimfile.replace('@', str(i))))
-        bim = pd.concat(bim_dfs, ignore_index=True)
+def get_files(file_name):
+    if '@' in file_name:
+        valid_files = []
+        for i in range(1, 23):
+            cur_file = file_name.replace('@', str(i))
+            if os.path.isfile(cur_file):
+                valid_files.append(cur_file)
+            else:
+                raise ValueError('No file matching {} for chr {}'.format(
+                    file_name, i))
+        return valid_files
     else:
-        bim = pd.read_csv(args.bimfile,
-                          header=None,
-                          names=['CHR', 'SNP', 'CM', 'BP', 'A1', 'A2'],
-                          delim_whitespace=True)
+        if os.path.isfile(file_name):
+            return [file_name]
+        else:
+            ValueError('No files matching {}'.format(file_name))
+
+
+def prep(bfile, annot, sumstats1, already_munged1, N1, sumstats2, already_munged2, N2):
+    if annot is not None:
+        bim_files = get_files(bfile + '.bim')
+        annot_files = get_files(annot)
+        len_b, len_a = len(bim_files), len(annot_files)
+        if len_b != len_a and len_b > 1 and len_a > 1:
+            raise ValueError("The number of bim files and annotation files " +
+                             "should be the same.")
+
+    # read in bim files
+    bims = [pd.read_csv(f,
+                        header=None,
+                        names=['CHR', 'SNP', 'CM', 'BP', 'A1', 'A2'],
+                        delim_whitespace=True) for f in bim_files]
+    bim = pd.concat(bims, ignore_index=True)
+
+    # read in annotation files
+    if annot is not None:
+        annots = [pd.read_csv(f, delim_whitespace=True) for f in annot_files]
+        for i, a in enumerate(annots):
+            if len(a) != len(bims[i]):
+                raise ValueError("Number of rows in bim and annotation " +
+                                 "files are not equal for {} and {}".format(
+                                    bim_files[i], annot_files[i]))
+            annots[i] = pd.concat([bims[i][['CHR', 'SNP', 'BP', 'CM']],
+                                   pd.Series(np.ones(len(a))),
+                                   a], axis=1)
+            annots[i].rename(columns={0: 'ALL_'}, inplace=True)
+    else:
+        annots = None
 
     # call munge_sumstats on the two sumstats files
     dfs = []
     ms_args = munge_sumstats.parser.parse_args([])
     ms_args.out = 'ldsc'  # we set this because it is required by munge_sumstats
                           # but it is not used for our purposes.
-    for file, n, should_munge in [(args.sumstats1, args.N1, args.munge1),
-                                  (args.sumstats2, args.N2, args.munge2)]:
-        if should_munge:
-            print '=== MUNGING SUMSTATS FOR {} ==='.format(file)
+    for file, n, already_munged in [(sumstats1, N1, already_munged1),
+                                  (sumstats2, N2, already_munged2)]:
+        if not already_munged:
+            print('=== MUNGING SUMSTATS FOR {} ==='.format(file))
             ms_args.sumstats = file
             ms_args.N = n
             dfs.append(munge_sumstats.munge_sumstats(ms_args, p=False))
@@ -92,25 +125,7 @@ def pre_function(args):
     allign_alleles(df)
     df = df[matched_or_reversed(df)]
 
-    # take maximum value of N
-    df['N_x'] = np.maximum(df['N_x'], 0)
-    df['N_y'] = np.maximum(df['N_y'], 0)
-
-    return df[['CHR', 'SNP', 'N_x', 'Z_x', 'N_y', 'Z_y']]
-
-
-if __name__ == "__main__":
-    # parse args
-    parser = argparse.ArgumentParser()
-    parser.add_argument('sumstats1',
-        help='the first sumstats file')
-    parser.add_argument('sumstats2',
-        help='the second sumstats file')
-    parser.add_argument('--bimfile', default=None, type=str, required=True,
-        help='bim filename. replace chromosome number with @ if \
-            there are multiple.')
-    parser.add_argument('--N1', default=None, type=int,
-        help='N for sumstats1 if there is no N column')
-    parser.add_argument('--N2', default=None, type=int,
-        help='N for sumstats2 if there is no N column')
-    df = pre_function(parser.parse_args())
+    return (df[['CHR', 'SNP', 'Z_x', 'Z_y']],
+            np.maximum(df['N_x'], 0) if N1 is None else N1,
+            np.maximum(df['N_y'], 0) if N2 is None else N2,
+            annots)
