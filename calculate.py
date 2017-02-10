@@ -52,18 +52,20 @@ def calculate(gwas_snps, ld_scores, annots, N1, N2):
         W[i][j] = np.sum((annot.iloc[:,i]==1) & (annot.iloc[:,j]==1)) / np.sum(annot.iloc[:,j] == 1)
 
     # Calculate heritability
+    Z_x, Z_y = merged['Z_x'], merged['Z_y']
+
     if annots is None:
-        h2_1 = p0 * (np.mean(merged['Z_x'] ** 2) - 1) / (N1 * np.mean(ld_score_all))
-        h2_2 = p0 * (np.mean(merged['Z_y'] ** 2) - 1) / (N2 * np.mean(ld_score_all))
+        h2_1 = p0 * (np.mean(Z_x ** 2) - 1) / (N1 * np.mean(ld_score_all))
+        h2_2 = p0 * (np.mean(Z_y ** 2) - 1) / (N2 * np.mean(ld_score_all))
     else:
-        tau1 = (np.mean((merged['Z_x']) ** 2) - 1)/(N1 * np.mean(ld_score_all))
-        tau2 = (np.mean((merged['Z_y']) ** 2) - 1)/(N2 * np.mean(ld_score_all))
+        tau1 = (np.mean((Z_x) ** 2) - 1)/(N1 * np.mean(ld_score_all))
+        tau2 = (np.mean((Z_y) ** 2) - 1)/(N2 * np.mean(ld_score_all))
         w1 = 1 /(ld_score_all * (1 + N1 * tau1 * ld_score_all) ** 2)
         w2 = 1 /(ld_score_all * (1 + N2 * tau2 * ld_score_all) ** 2)
         w1[(w1 < 0) | (w1 == np.inf) | (w1 == -np.inf)] = 0
         w2[(w2 < 0) | (w2 == np.inf) | (w2 == -np.inf)] = 0
-        m1 = linear_model.LinearRegression().fit(ld_scores, pd.DataFrame((merged['Z_x']) ** 2), sample_weight=w1)
-        m2 = linear_model.LinearRegression().fit(ld_scores, pd.DataFrame((merged['Z_y']) ** 2), sample_weight=w2)
+        m1 = linear_model.LinearRegression().fit(ld_scores, pd.DataFrame((Z_x) ** 2), sample_weight=w1)
+        m2 = linear_model.LinearRegression().fit(ld_scores, pd.DataFrame((Z_y) ** 2), sample_weight=w2)
         h2_1 = np.dot(W, m1.coef_.T * pd.DataFrame(P) / N1)
         h2_2 = np.dot(W, m2.coef_.T * pd.DataFrame(P) / N2)
 
@@ -72,12 +74,12 @@ def calculate(gwas_snps, ld_scores, annots, N1, N2):
         w1 = 1 + N1 * h2_1 * ld_score_all / len(ld_score_all)
         w2 = 1 + N2 * h2_2 * ld_score_all / len(ld_score_all)
     else:
-        w1 = 1 + p0 * (np.mean(merged['Z_x'] ** 2) - 1) / np.mean(ld_score_all) * ld_score_all / len(ld_score_all)
-        w2 = 1 + p0 * (np.mean(merged['Z_y'] ** 2) - 1) / np.mean(ld_score_all) * ld_score_all / len(ld_score_all)
+        w1 = 1 + p0 * (np.mean(Z_x ** 2) - 1) / np.mean(ld_score_all) * ld_score_all / len(ld_score_all)
+        w2 = 1 + p0 * (np.mean(Z_y ** 2) - 1) / np.mean(ld_score_all) * ld_score_all / len(ld_score_all)
 
-    w3 = np.mean(merged['Z_x'] * merged['Z_y']) * ld_score_all
+    w3 = np.mean(Z_x * Z_y) * ld_score_all
     w = 1 / (w1 * w2 + w3 * w3)
-    m = linear_model.LinearRegression().fit(pd.DataFrame(ld_score_all), pd.DataFrame(merged['Z_x'] * merged['Z_y']), sample_weight=w)
+    m = linear_model.LinearRegression().fit(pd.DataFrame(ld_score_all), pd.DataFrame(Z_x * Z_y), sample_weight=w)
     corr_pheno = m.intercept_[0]
 
     # Calculate Jackknife variance estimate
@@ -85,8 +87,8 @@ def calculate(gwas_snps, ld_scores, annots, N1, N2):
     q_block = np.empty([num_annotations, nblock])
 
     for i in range(num_annotations):
-        df_x = merged['Z_x'][annot.iloc[:,i] == 1]
-        df_y = merged['Z_y'][annot.iloc[:,i] == 1]
+        df_x = Z_x[annot.iloc[:,i] == 1]
+        df_y = Z_y[annot.iloc[:,i] == 1]
         tot = np.dot(df_x, df_y)
         for j, (b_x, b_y) in enumerate(zip(np.array_split(df_x, nblock), np.array_split(df_y, nblock))):
             q_block[i][j] = (tot - np.dot(b_x, b_y)) / ((len(df_x) - len(b_x) - corr_pheno) * ((N1 * N2) ** 0.5))

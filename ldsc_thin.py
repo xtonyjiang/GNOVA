@@ -167,9 +167,6 @@ def _ldscore(bfile, annots, gwas_snps):
             kept_cols = len(annot.df.columns)
             annot.df = subset_annot_file(annot.df, gwas_snps, kept_cols)
             annot_matrix = np.array(annot.df.iloc[:,4:])
-            if np.any(annot.df.SNP.values != gwas_snps.SNP.values):
-                raise ValueError('The .annot file must contain all SNPs in the study intersect in the same'+\
-                    ' order as the .bim file.')
         except Exception:
             log.log('Error parsing .annot file')
             raise
