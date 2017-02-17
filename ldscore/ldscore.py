@@ -65,7 +65,7 @@ class __GenotypeArrayInMemory__(object):
     Parent class for various classes containing interfaces for files with genotype
     matrices, e.g., plink .bed files, etc
     '''
-    def __init__(self, fname, n, snp_list, keep_snps=None, keep_indivs=None, mafMin=None):
+    def __init__(self, fname, n, snp_list, log, keep_snps=None, keep_indivs=None, mafMin=None):
         self.m = len(snp_list.IDList)
         self.n = n
         self.keep_snps = keep_snps
@@ -85,7 +85,7 @@ class __GenotypeArrayInMemory__(object):
                 self.n)
 
             if self.n > 0:
-                print 'After filtering, {n} individuals remain'.format(n=self.n)
+                log.log('After filtering, {n} individuals remain'.format(n=self.n))
             else:
                 raise ValueError('After filtering, no individuals remain')
 
@@ -99,7 +99,7 @@ class __GenotypeArrayInMemory__(object):
             self.geno, self.m, self.n, self.mafMin, keep_snps)
 
         if self.m > 0:
-            print 'After filtering, {m} SNPs remain'.format(m=self.m)
+            log.log('After filtering, {m} SNPs remain'.format(m=self.m))
         else:
             raise ValueError('After filtering, no SNPs remain')
 
@@ -245,7 +245,7 @@ class PlinkBEDFile(__GenotypeArrayInMemory__):
     '''
     Interface for Plink .bed format
     '''
-    def __init__(self, fname, n, snp_list, keep_snps=None, keep_indivs=None, mafMin=None):
+    def __init__(self, fname, n, snp_list, log, keep_snps=None, keep_indivs=None, mafMin=None):
         self._bedcode = {
             2: ba.bitarray('11'),
             9: ba.bitarray('10'),
@@ -253,7 +253,7 @@ class PlinkBEDFile(__GenotypeArrayInMemory__):
             0: ba.bitarray('00')
             }
 
-        __GenotypeArrayInMemory__.__init__(self, fname, n, snp_list, keep_snps=keep_snps,
+        __GenotypeArrayInMemory__.__init__(self, fname, n, snp_list, log, keep_snps=keep_snps,
             keep_indivs=keep_indivs, mafMin=mafMin)
 
     def __read__(self, fname, m, n):

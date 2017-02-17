@@ -1,12 +1,9 @@
-#!/usr/bin/python
-
 import os, sys
 
 import numpy as np
 import pandas as pd
 
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'ldsc'))
-import munge_sumstats
 
 
 def allign_alleles(df):
@@ -65,7 +62,7 @@ def get_files(file_name):
             ValueError('No files matching {}'.format(file_name))
 
 
-def prep(bfile, annot, sumstats1, already_munged1, N1, sumstats2, already_munged2, N2):
+def prep(bfile, annot, sumstats1, sumstats2):
     bim_files = get_files(bfile + '.bim')
 
     if annot is not None:
@@ -97,20 +94,8 @@ def prep(bfile, annot, sumstats1, already_munged1, N1, sumstats2, already_munged
     else:
         annots = None
 
-    # call munge_sumstats on the two sumstats files
-    dfs = []
-    ms_args = munge_sumstats.parser.parse_args([])
-    ms_args.out = 'ldsc'  # we set this because it is required by munge_sumstats
-                          # but it is not used for our purposes.
-    for file, n, already_munged in [(sumstats1, N1, already_munged1),
-                                  (sumstats2, N2, already_munged2)]:
-        if not already_munged:
-            print('=== MUNGING SUMSTATS FOR {} ==='.format(file))
-            ms_args.sumstats = file
-            ms_args.N = n
-            dfs.append(munge_sumstats.munge_sumstats(ms_args, p=False))
-        else:
-            dfs.append(pd.read_csv(file, delim_whitespace=True))
+    dfs = [pd.read_csv(file, delim_whitespace=True)
+        for file in [sumstats1, sumstats2]]
 
     # rename cols
     bim.rename(columns={'A1': 'A1_ref', 'A2': 'A2_ref'}, inplace=True)
@@ -127,6 +112,6 @@ def prep(bfile, annot, sumstats1, already_munged1, N1, sumstats2, already_munged
     df = df[matched_or_reversed(df)]
 
     return (df[['CHR', 'SNP', 'Z_x', 'Z_y']],
-            np.maximum(df['N_x'], 0) if N1 is None else N1,
-            np.maximum(df['N_y'], 0) if N2 is None else N2,
+            df['N_x'].max(),
+            df['N_y'].max(),
             annots)

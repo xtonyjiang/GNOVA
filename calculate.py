@@ -55,8 +55,8 @@ def calculate(gwas_snps, ld_scores, annots, N1, N2):
     Z_x, Z_y = merged['Z_x'], merged['Z_y']
 
     if annots is None:
-        h2_1 = [p0 * (np.mean(Z_x ** 2) - 1) / (N1 * np.mean(ld_score_all))]
-        h2_2 = [p0 * (np.mean(Z_y ** 2) - 1) / (N2 * np.mean(ld_score_all))]
+        h2_1 = np.array([p0 * (np.mean(Z_x ** 2) - 1) / (N1 * np.mean(ld_score_all))])
+        h2_2 = np.array([p0 * (np.mean(Z_y ** 2) - 1) / (N2 * np.mean(ld_score_all))])
     else:
         tau1 = (np.mean((Z_x) ** 2) - 1)/(N1 * np.mean(ld_score_all))
         tau2 = (np.mean((Z_y) ** 2) - 1)/(N2 * np.mean(ld_score_all))
@@ -71,8 +71,8 @@ def calculate(gwas_snps, ld_scores, annots, N1, N2):
 
     # Calculate sample overlap correction
     if annots is None:
-        w1 = 1 + N1 * h2_1 * ld_score_all / len(ld_score_all)
-        w2 = 1 + N2 * h2_2 * ld_score_all / len(ld_score_all)
+        w1 = 1 + N1 * (h2_1 * ld_score_all / len(ld_score_all))
+        w2 = 1 + N2 * (h2_2 * ld_score_all / len(ld_score_all))
     else:
         w1 = 1 + p0 * (np.mean(Z_x ** 2) - 1) / np.mean(ld_score_all) * ld_score_all / len(ld_score_all)
         w2 = 1 + p0 * (np.mean(Z_y ** 2) - 1) / np.mean(ld_score_all) * ld_score_all / len(ld_score_all)
@@ -121,5 +121,6 @@ def calculate(gwas_snps, ld_scores, annots, N1, N2):
                 'corr_corrected': corr_corrected[0],
                 'h2_1': h2_1.T[0],
                 'h2_2': h2_2.T[0],
+                'p': P,
                 'p0': p0
            }

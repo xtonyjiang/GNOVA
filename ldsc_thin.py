@@ -8,15 +8,12 @@ LDSC is a command line tool for estimating
     3. genetic covariance / correlation
 
 '''
-from __future__ import division
+from __future__ import division, print_function
 import ldscore.ldscore as ld
 import ldscore.parse as ps
-import prep as pr
 import numpy as np
 import pandas as pd
-from subprocess import call
-from itertools import product
-import time, sys, traceback, argparse, glob
+import cPickle
 
 try:
     x = pd.DataFrame({'A': [1, 2, 3]})
@@ -67,10 +64,11 @@ class Logger(object):
 
     def log(self, msg):
         '''
-        Print to log file and stdout with a single command.
+        Print to log file.
+        TODO: Also print to stdout if verbose flag is set.
 
         '''
-        print msg
+        print(msg, file=self.log_fh)
 
 
 def _remove_dtype(x):
@@ -79,25 +77,6 @@ def _remove_dtype(x):
     x = x.replace('\ndtype: int64', '')
     x = x.replace('\ndtype: float64', '')
     return x
-
-
-def __filter__(fname, noun, verb, merge_obj):
-    merged_list = None
-    if fname:
-        f = lambda x,n: x.format(noun=noun, verb=verb, fname=fname, num=n)
-        x = ps.FilterFile(fname)
-        c = 'Read list of {num} {noun} to {verb} from {fname}'
-        print f(c, len(x.IDList))
-        merged_list = merge_obj.loj(x.IDList)
-        len_merged_list = len(merged_list)
-        if len_merged_list > 0:
-            c = 'After merging, {num} {noun} remain'
-            print f(c, len_merged_list)
-        else:
-            error_msg = 'No {noun} retained for analysis'
-            raise ValueError(f(error_msg, 0))
-
-        return merged_list
 
 
 def loj_bim(filter_df, array):
@@ -110,12 +89,12 @@ def loj_bim(filter_df, array):
     return np.nonzero(ii)[0]
 
 
-def __filter_bim__(filter_df, array):
+def __filter_bim__(filter_df, array, log):
     merged_list = loj_bim(filter_df, array)
     len_merged_list = len(merged_list)
     if len_merged_list > 0:
         c = 'After merging, {0} SNPs remain'
-        print c.format(len_merged_list)
+        log.log(c.format(len_merged_list))
     else:
         error_msg = 'No SNPs retained for analysis'
         raise ValueError(error_msg)
@@ -174,7 +153,7 @@ def _ldscore(bfile, annots, gwas_snps):
         annot_matrix, annot_colnames, keep_snps = None, None, None,
         n_annot = 1
 
-    keep_snps = __filter_bim__(gwas_snps, array_snps)
+    keep_snps = __filter_bim__(gwas_snps, array_snps, log)
 
 
     # read fam
@@ -186,7 +165,7 @@ def _ldscore(bfile, annots, gwas_snps):
 
     # read genotype array
     log.log('Reading genotypes from {fname}'.format(fname=array_file))
-    geno_array = array_obj(array_file, n, array_snps, keep_snps=keep_snps,
+    geno_array = array_obj(array_file, n, array_snps, log, keep_snps=keep_snps,
         keep_indivs=keep_indivs, mafMin=None)
 
     #determine block widths
@@ -199,7 +178,7 @@ def _ldscore(bfile, annots, gwas_snps):
     scale_suffix = ''
 
     lN = geno_array.ldScoreVarBlocks(block_left, 50, annot=annot_matrix)
-    col_prefix = "L2"; file_suffix = "l2"
+    col_prefix = "L2";
 
     if n_annot == 1:
         ldscore_colnames = [col_prefix+scale_suffix]
@@ -210,7 +189,6 @@ def _ldscore(bfile, annots, gwas_snps):
     new_colnames = geno_array.colnames + ldscore_colnames
     df = pd.DataFrame.from_records(np.c_[geno_array.df, lN])
     df.columns = new_colnames
-    l2_suffix = '.gz'
     df.drop(['CM','MAF'], axis=1)
 
     # print LD Score summary
@@ -253,12 +231,12 @@ def _ldscore(bfile, annots, gwas_snps):
     return df
 
 
-def ldscore(bfile, annots, gwas_snps):
+def ldscore(bfile, annots, gwas_snps, save_ld):
     df = None
+    print('Computing LD scores...')
     if '@' in bfile:
         all_dfs = []
         for i in range(1, 23):
-            print '=== COMPUTING LD SCORES FOR CHROMOSOME {} ==='.format(i)
             cur_bfile = bfile.replace('@', str(i))
             if annots is None:
                 cur_annot = None
@@ -267,10 +245,13 @@ def ldscore(bfile, annots, gwas_snps):
             else:
                 cur_annot = annots
             all_dfs.append(_ldscore(cur_bfile, cur_annot, gwas_snps))
+            print('Computed LD scores for chromosome {}'.format(i))
         df = pd.concat(all_dfs)
     else:
         df = _ldscore(bfile, annots, gwas_snps)
 
     numeric = df._get_numeric_data()
     numeric[numeric < 0] = 0
+    if save_ld is not None:
+        cPickle.dump(df, open(save_ld, 'wb'))
     return df
