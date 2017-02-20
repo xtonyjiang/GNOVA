@@ -233,7 +233,6 @@ def _ldscore(bfile, annots, gwas_snps):
 
 def ldscore(bfile, annots, gwas_snps, save_ld):
     df = None
-    print('Computing LD scores...')
     if '@' in bfile:
         all_dfs = []
         for i in range(1, 23):

@@ -112,6 +112,6 @@ def prep(bfile, annot, sumstats1, sumstats2):
     df = df[matched_or_reversed(df)]
 
     return (df[['CHR', 'SNP', 'Z_x', 'Z_y']],
-            df['N_x'].max(),
-            df['N_y'].max(),
+            dfs[0]['N_x'].max(),
+            dfs[1]['N_y'].max(),
             annots)

@@ -7,14 +7,22 @@ import pandas as pd
 
 def pipeline(args):
     pd.options.mode.chained_assignment = None
+    print('Preparing files for analysis...')
     gwas_snps, N1, N2, annots = prep(args.bfile,
                                      args.annot,
                                      args.sumstats1,
                                      args.sumstats2)
+    if args.N1 is not None:
+        N1 = args.N1
+    if args.N2 is not None:
+        N2 = args.N2
     if args.use_ld is not None:
+        print('Loading LD scores from {}'.format(args.use_ld))
         ld_scores = cPickle.load(open(args.use_ld, 'rb'))
     else:
+        print('Calculating LD scores...')
         ld_scores = ldscore(args.bfile, annots, gwas_snps, args.save_ld)
+    print('Calculating correlation...')
     results = calculate(gwas_snps, ld_scores, annots, N1, N2)
     results_to_print = collections.OrderedDict(
         [('rho', results['rho']),
@@ -48,6 +56,12 @@ parser.add_argument('--annot', type=str,
     help='Filename prefix for annotation file for partitioned LD Score estimation. '
     'LDSC will automatically append .annot or .annot.gz to the filename prefix. '
     'See docs/file_formats_ld for a definition of the .annot format.')
+parser.add_argument('--N1', type=int,
+    help='N of the sumstats1 file. If not provided, this value will be inferred '
+    'from the sumstats1 arg.')
+parser.add_argument('--N2', type=int,
+    help='N of the sumstats2 file. If not provided, this value will be inferred '
+    'from the sumstats2 arg.')
 
 parser.add_argument('--out', required=True, type=str,
     help='Location to output results.')
