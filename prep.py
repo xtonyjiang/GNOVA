@@ -1,10 +1,7 @@
-import os, sys
+import os
 
 import numpy as np
 import pandas as pd
-
-sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'ldsc'))
-
 
 def allign_alleles(df):
     """Look for reversed alleles and inverts the z-score for one of them.
