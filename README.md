@@ -24,13 +24,13 @@ python gnova.py data/CD.sumstats.gz data/UC.sumstats.gz \
 ```
 ### Explanation of Command-Line Arguments
 
-- The first two arguments, `data/CD.sumstats.gz` and `data/UC.sumstats.gz`, denote the locations of the first and second summary statistics files. These files may be compressed using gzip, bz2, zip, xz, or not compressed at all. The program will infer the compression method if the files end with .gz, .bz2, .zip, xz, respectively. We assume that the files are in the standard format that `ldsc` understands. If not, make sure to run them through the included `munge_sumstats.py` file, or use the one included in `ldsc` (see [here](https://github.com/bulik/ldsc/wiki/Heritability-and-Genetic-Correlation#reformatting-summary-statistics) for instructions)
+- The first two arguments, `data/CD.sumstats.gz` and `data/UC.sumstats.gz`, denote the locations of the first and second summary statistics files. These files may be compressed using gzip, bz2, zip, xz, or not compressed at all. The program will infer the compression method if the files end with .gz, .bz2, .zip, xz, respectively. We assume that the files are in the standard format that `ldsc` understands. If not, make sure to run them through the included `munge_sumstats.py` file, or use the one included in `ldsc` (see [here](https://github.com/bulik/ldsc/wiki/Heritability-and-Genetic-Correlation#reformatting-summary-statistics) for instructions). You can get your own GWAS summary statistics files for these two diseases [here](https://www.ibdgenetics.org).
 
 - The `N1` and `N2` arguments (optional) denote the sample sizes of the summary statistics files. If they are not provided, they will be inferred from the summary statistics files.
 
 - The `bfile` argument denotes the prefix of the `.bed/.bim/.fam` genotypic data files. The '@' denotes a wildcard character that will be replaced by 1-22, for multi-chromosome analysis.
 
-- The `annot` argument (optional) denotes the location of the annotation files if doing annotation-stratified analysis. **We assume that for each chromsome that we are doing analysis on, there is a corresponding whitespace-delimited annotation file for that chromosome, such that if there are n rows in the bim file for chromosome 1, there are n+1 rows for the corresponding annotation file (the annotation file should have an extra row denoting the names of the annotations)**
+- The `annot` argument (optional) denotes the location of the annotation files if doing annotation-stratified analysis. **We assume that for each chromsome that we are doing analysis on, there is a corresponding whitespace-delimited annotation file for that chromosome, such that if there are n rows in the bim file for chromosome 1, there are n+1 rows for the corresponding annotation file (the annotation file should have an extra row denoting the names of the annotations).**
 
 - The `out` flag denotes the file location for the results to be outputted to.
 
@@ -47,6 +47,10 @@ The output will be a whitespace-delimited text file, with the rows corresponding
 - `h2_2`: The heritability estimate for the second trait.
 
 ## Credits
-LD score calculation adapted from LDSC. See
+Those using the GNOVA software should cite:
+
+Lu, et al. A powerful approach to estimating annotation-stratified genetic covariance using GWAS summary statistics. bioRxiv, 2016.
+
+The LD score calculation adapted from LDSC. See
 [Bulik-Sullivan, et al. LD Score Regression Distinguishes Confounding from Polygenicity in Genome-Wide Association Studies.
 Nature Genetics, 2015.](http://www.nature.com/ng/journal/vaop/ncurrent/full/ng.3211.html)
