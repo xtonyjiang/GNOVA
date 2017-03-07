@@ -34,6 +34,18 @@ python gnova.py data/CD.sumstats.gz data/UC.sumstats.gz \
 
 - The `out` flag denotes the file location for the results to be outputted to.
 
+### Explanation of Output
+The output will be a whitespace-delimited text file, with the rows corresponding to different annotations and the columns as such:
+
+- `rho:` The genetic covariance estimate.
+- `rho_corrected:` The genetic covariance estimate with sample overlap correction.
+- `pvalue:` The p-value from the statistical test for genetic covariance.
+- `pvalue_corrected:` The p-value from the statistical test for genetic covariance with sample overlap correction.
+- `corr`: The genetic correlation estimate.
+- `corr_corrected`: The genetic correlation estimate with sample overlap correction.
+- `h2_1`: The heritability estimate for the first trait.
+- `h2_2`: The heritability estimate for the second trait.
+
 ## Credits
 LD score calculation adapted from LDSC. See
 [Bulik-Sullivan, et al. LD Score Regression Distinguishes Confounding from Polygenicity in Genome-Wide Association Studies.
