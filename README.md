@@ -49,7 +49,7 @@ The output will be a whitespace-delimited text file, with the rows corresponding
 ## Credits
 Those using the GNOVA software should cite:
 
-Lu, et al. A powerful approach to estimating annotation-stratified genetic covariance using GWAS summary statistics. bioRxiv, 2016.
+[Lu, et al. A powerful approach to estimating annotation-stratified genetic covariance using GWAS summary statistics. bioRxiv, 2016.](http://biorxiv.org/content/early/2017/03/07/114561)
 
 The LD score calculation adapted from LDSC. See
 [Bulik-Sullivan, et al. LD Score Regression Distinguishes Confounding from Polygenicity in Genome-Wide Association Studies.
