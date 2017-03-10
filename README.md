@@ -60,6 +60,6 @@ Those using the GNOVA software should cite:
 
 [Lu, et al. A powerful approach to estimating annotation-stratified genetic covariance using GWAS summary statistics. bioRxiv, 2016.](http://biorxiv.org/content/early/2017/03/07/114561)
 
-The LD score calculation adapted from LDSC. See
+The LD score calculation is adapted from `ldsc`. See
 [Bulik-Sullivan, et al. LD Score Regression Distinguishes Confounding from Polygenicity in Genome-Wide Association Studies.
 Nature Genetics, 2015.](http://www.nature.com/ng/journal/vaop/ncurrent/full/ng.3211.html)
