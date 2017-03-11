@@ -18,8 +18,12 @@ Suppose you would like to calculate genetic covariance between Crohn's Disease a
 
 - **Plink bfiles:** These are files .bed/.bim/.fam format. You can download some that we have prepared for you [here](http://genocanyon.med.yale.edu/GNOVAFiles/genotype_1KG_eur_SNPmaf5.tar.gz). These files are from the 1000 Genomes Project, with rare variants (MAF < 5%) filtered out.
 
-- **Anotation files:** These are only necessary if you are doing annotation-stratified analysis. You can download some example annotation files that we have prepared for you [here](http://genocanyon.med.yale.edu/GNOVAFiles/annotations.tar.gz).
+- **Anotation files:** These are only necessary if you are doing annotation-stratified analysis. You can download some example annotation files that we have prepared for you [here](http://genocanyon.med.yale.edu/GNOVAFiles/annotations.tar.gz). There are three different types of annotation files here:
+    - **annot_GenoCanyon:** Predicted functional and non-functional SNPs based on GenoCanyon annotations.
+    - **annot_MAF:** Minor allele frequency quartiles based on samples from the 1000 Genomes Project with European ancestry.
+    - **annot_GSplus7tissues:** Seven broadly-defined tissue categories based on GenoSkyline-Plus annotations.
 
+More details about these supplied files can be found in in the [GNOVA manuscript](http://biorxiv.org/content/early/2017/03/07/114561).
 
 We may run the following command:
 
