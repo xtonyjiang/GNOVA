@@ -79,13 +79,7 @@ def prep(bfile, annot, sumstats1, sumstats2):
     # read in annotation files
     if annot is not None:
         annots = [pd.read_csv(f, delim_whitespace=True) for f in annot_files]
-        annot_names = annots[0].columns
-        num_annotations = len(annot_names)
-        has_zeroes = [False] * num_annotations
         for i, a in enumerate(annots):
-            for j in range(num_annotations):
-                if not a.ix[:,j].all():
-                    has_zeroes[j] = True
             if len(a) != len(bims[i]):
                 raise ValueError("Number of rows in bim and annotation " +
                                  "files are not equal for {} and {}".format(
@@ -94,13 +88,6 @@ def prep(bfile, annot, sumstats1, sumstats2):
                                    pd.Series(np.ones(len(a))),
                                    a], axis=1)
             annots[i].rename(columns={0: 'ALL_'}, inplace=True)
-        to_drop = [annot_names[i] for i, x in enumerate(has_zeroes) if not x]
-        if len(to_drop) > 0:
-            print('The following annotations will not be considered because '
-                  'they include all SNPs: {}'.format(to_drop))
-        for i, df in enumerate(annots):
-            annots[i] = df.drop(to_drop, axis=1).reset_index(drop=True)
-
     else:
         annots = None
 

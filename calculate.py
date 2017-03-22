@@ -1,5 +1,6 @@
 #!/usr/bin/python
 from __future__ import division
+import collections
 from itertools import product
 import numpy as np
 import pandas as pd
@@ -116,16 +117,31 @@ def calculate(gwas_snps, ld_scores, annots, N1, N2):
     p_value = norm.sf(abs(rho / (cov_rho.diagonal() ** 0.5))) * 2
     p_value_corrected = norm.sf(abs(rho_corrected / (cov_rho.diagonal() ** 0.5))) * 2
 
-    return {
-                'rho': rho,
-                'rho_corrected': rho_corrected,
-                'p_value': p_value,
-                'p_value_corrected': p_value_corrected,
-                'var_rho': cov_rho.diagonal(),
-                'corr': corr[0],
-                'corr_corrected': corr_corrected[0],
-                'h2_1': h2_1.T[0],
-                'h2_2': h2_2.T[0],
-                'p': P,
-                'p0': p0
-           }
+    out = pd.DataFrame(collections.OrderedDict(
+        [('rho', rho),
+         ('rho_corrected', rho_corrected),
+         ('pvalue', p_value),
+         ('pvalue_corrected', p_value_corrected),
+         ('corr', corr[0]),
+         ('corr_corrected', corr_corrected[0]),
+         ('h2_1', h2_1.T[0]),
+         ('h2_2', h2_2.T[0]),
+         ('p', P),
+         ('p0', p0)
+        ]
+    ))
+
+    # Check for all-1 annotations and remove them from the output
+    has_all_ones = False
+    if len(out) > 1:
+        for row in out.index:
+            if annot[row].all():
+                out.loc[row,:-2] = np.nan
+                has_all_ones = True
+    if has_all_ones:
+        print('NOTE: There is at least one annotation that applies to every SNP. '
+              'Non-stratified analysis will provide better estimates for the '
+              'total genetic covariance and genetic correlation, so we have labeled '
+              'the results for these annotations as "NA" in the output.')
+
+    return out

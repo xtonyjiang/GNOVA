@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import argparse, collections, os.path, sys
+import argparse, os.path, sys
 from prep import prep
 from ldsc_thin import ldscore
 from calculate import calculate
@@ -43,25 +43,11 @@ def pipeline(args):
         print('Calculating LD scores...')
         ld_scores = ldscore(args.bfile, annots, gwas_snps, args.save_ld)
     print('Calculating correlation...')
-    results = calculate(gwas_snps, ld_scores, annots, N1, N2)
-    results_to_print = collections.OrderedDict(
-        [('rho', results['rho']),
-         ('rho_corrected', results['rho_corrected']),
-         ('pvalue', results['p_value']),
-         ('pvalue_corrected', results['p_value_corrected']),
-         ('corr', results['corr']),
-         ('corr_corrected', results['corr_corrected']),
-         ('h2_1', results['h2_1']),
-         ('h2_2', results['h2_2']),
-         ('p', results['p']),
-         ('p0', results['p0'])
-        ]
-    )
-    out = pd.DataFrame(results_to_print)
+    out = calculate(gwas_snps, ld_scores, annots, N1, N2)
     print('Final results:\n{}\n'.format(out))
     print('\nView ldsc.log for verbose output.')
     out.insert(0, 'annot_name', out.index)
-    out.to_csv(args.out, sep=' ', index=False)
+    out.to_csv(args.out, sep=' ', na_rep='NA', index=False)
 
 
 parser = argparse.ArgumentParser()
@@ -96,4 +82,4 @@ if __name__ == '__main__':
     if sys.version_info[0] != 2:
         print('ERROR: GNOVA does not run on Python 3. Please run it on Python 2.7.x.')
         sys.exit(1)
-    pipeline(parser.parse_args())
+    out = pipeline(parser.parse_args())
