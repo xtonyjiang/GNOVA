@@ -104,8 +104,13 @@ def calculate(gwas_snps, ld_scores, annots, N1, N2):
     cov_rho = W.dot(inv(S)).dot(cov_q).dot(inv(S)).dot(W.T)
 
     # genetic correlation
-    corr = rho / ((h2_1 * h2_2) ** 0.5).T
-    corr_corrected = rho_corrected / ((h2_1 * h2_2) ** 0.5).T
+    if (h2_1 > 0).all() and (h2_2 > 0).all():
+        corr = rho / ((h2_1 * h2_2) ** 0.5).T
+        corr_corrected = rho_corrected / ((h2_1 * h2_2) ** 0.5).T
+    else:
+        print('Correlation estimates are NaN because the heritability '
+              'estimates were negative.')
+        corr = corr_corrected = np.nan * np.empty(num_annotations)
 
     # p-value
     p_value = norm.sf(abs(rho / (cov_rho.diagonal() ** 0.5))) * 2
