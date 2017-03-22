@@ -22,7 +22,7 @@ def pipeline(args):
         if not parent_dir_exists(args.save_ld):
             raise ValueError('--save-ld flag points to an invalid path.')
     if args.use_ld is not None:
-        if not os.path.exists(args.use_ld):
+        if not os.path.exists(args.use_ld + '.csv.gz'):
             raise ValueError('--use-ld flag points to an invalid path.')
     if not parent_dir_exists(args.out):
         raise ValueError('--out flag points to an invalid path.')
