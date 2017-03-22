@@ -1,15 +1,32 @@
 #!/usr/bin/env python
-import argparse, collections, sys
+import argparse, collections, os.path, sys
 from prep import prep
 from ldsc_thin import ldscore
 from calculate import calculate
 import pandas as pd
 
+
+# returns whether the parent directory of path exists
+def parent_dir_exists(path):
+    return os.path.exists(os.path.abspath(os.path.join(path, os.pardir)))
+
+
 def pipeline(args):
     pd.options.mode.chained_assignment = None
+
+    # Sanity check args
     if args.save_ld is not None and args.use_ld is not None:
         raise ValueError('Both the --save-ld and --use-ld flags were set. '
                          'Please use only one of them.')
+    if args.save_ld is not None:
+        if not parent_dir_exists(args.save_ld):
+            raise ValueError('--save-ld flag points to an invalid path.')
+    if args.use_ld is not None:
+        if not os.path.exists(args.use_ld):
+            raise ValueError('--use-ld flag points to an invalid path.')
+    if not parent_dir_exists(args.out):
+        raise ValueError('--out flag points to an invalid path.')
+
     print('Preparing files for analysis...')
     gwas_snps, N1, N2, annots = prep(args.bfile,
                                      args.annot,
