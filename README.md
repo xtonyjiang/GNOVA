@@ -58,6 +58,7 @@ Here is an explanation of the other command-line arguments that weren't shown in
 ### Explanation of Output
 The output will be a whitespace-delimited text file, with the rows corresponding to different annotations and the columns as such:
 
+- `annot_name:` The name of the annotation.
 - `rho:` The genetic covariance estimate.
 - `rho_corrected:` The genetic covariance estimate with sample overlap correction.
 - `pvalue:` The p-value from the statistical test for genetic covariance.

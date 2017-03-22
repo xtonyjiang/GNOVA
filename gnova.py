@@ -60,6 +60,7 @@ def pipeline(args):
     out = pd.DataFrame(results_to_print)
     print('Final results:\n{}\n'.format(out))
     print('\nView ldsc.log for verbose output.')
+    out.insert(0, 'annot_name', out.index)
     out.to_csv(args.out, sep=' ', index=False)
 
 
