@@ -13,7 +13,6 @@ import ldscore.ldscore as ld
 import ldscore.parse as ps
 import numpy as np
 import pandas as pd
-import cPickle
 
 try:
     x = pd.DataFrame({'A': [1, 2, 3]})
@@ -252,5 +251,7 @@ def ldscore(bfile, annots, gwas_snps, save_ld):
     numeric = df._get_numeric_data()
     numeric[numeric < 0] = 0
     if save_ld is not None:
-        cPickle.dump(df, open(save_ld, 'wb'))
+        file_name = save_ld + '.csv.gz'
+        print('Saving computed LD scores to {}.'.format(file_name))
+        df.to_csv(file_name, ' ', index=False, compression='gzip')
     return df

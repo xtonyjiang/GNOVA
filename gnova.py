@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import argparse, collections, cPickle
+import argparse, collections, sys
 from prep import prep
 from ldsc_thin import ldscore
 from calculate import calculate
@@ -7,6 +7,9 @@ import pandas as pd
 
 def pipeline(args):
     pd.options.mode.chained_assignment = None
+    if args.save_ld is not None and args.use_ld is not None:
+        raise ValueError('Both the --save-ld and --use-ld flags were set. '
+                         'Please use only one of them.')
     print('Preparing files for analysis...')
     gwas_snps, N1, N2, annots = prep(args.bfile,
                                      args.annot,
@@ -18,7 +21,7 @@ def pipeline(args):
         N2 = args.N2
     if args.use_ld is not None:
         print('Loading LD scores from {}'.format(args.use_ld))
-        ld_scores = cPickle.load(open(args.use_ld, 'rb'))
+        ld_scores = pd.read_csv(args.use_ld + '.csv.gz', sep=' ')
     else:
         print('Calculating LD scores...')
         ld_scores = ldscore(args.bfile, annots, gwas_snps, args.save_ld)
@@ -66,10 +69,13 @@ parser.add_argument('--N2', type=int,
 parser.add_argument('--out', required=True, type=str,
     help='Location to output results.')
 parser.add_argument('--save-ld', type=str,
-    help='Location to save LD score calculations as pickle files to. If not '
-         'set, then then no intermediate calculations will be saved.')
+    help='Prefix of the location to save LD score calculations as gzipped .csv '
+         'files. If not set, then then no intermediate calculations will be saved.')
 parser.add_argument('--use-ld', type=str,
-    help='Location to load LD score calculations from.')
+    help='Prefix of the location to load LD score calculations from.')
 
 if __name__ == '__main__':
+    if sys.version_info[0] != 2:
+        print('ERROR: GNOVA does not run on Python 3. Please run it on Python 2.7.x.')
+        sys.exit(1)
     pipeline(parser.parse_args())

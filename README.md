@@ -31,7 +31,7 @@ We may run the following command:
 python gnova.py data/CD.sumstats.gz data/UC.sumstats.gz \
 --N1 27726 \
 --N2 28738 \
---bfile data/bim/eur_chr@_SNPmaf5 \
+--bfile data/bfiles/eur_chr@_SNPmaf5 \
 --annot data/annot/func.@.txt \
 --out results.txt
 ```
@@ -47,6 +47,14 @@ python gnova.py data/CD.sumstats.gz data/UC.sumstats.gz \
 
 - The `out` flag denotes the file location for the results to be outputted to.
 
+### Additional Command-Line Arguments
+
+Here is an explanation of the other command-line arguments that weren't shown in the example:
+
+- `--save-ld`: Running GNOVA with `--save-ld ldscores` will save intermediate LD score calculations to `ldscores.csv.gz`.
+
+- `--use-ld`: Running GNOVA with `--use-ld ldscores` will skip the LD score calculation step and instead load the intermediate calculations from `ldscore.csv.gz` that were generated with `--save-ld`.
+
 ### Explanation of Output
 The output will be a whitespace-delimited text file, with the rows corresponding to different annotations and the columns as such:
 
@@ -58,6 +66,8 @@ The output will be a whitespace-delimited text file, with the rows corresponding
 - `corr_corrected`: The genetic correlation estimate with sample overlap correction.
 - `h2_1`: The heritability estimate for the first trait.
 - `h2_2`: The heritability estimate for the second trait.
+
+NOTE: When functional annotations are present, the true heritability in each annotation category may be small. Although methods for estimating annotation-stratified heritability exist, they may provide unstable, in many cases negative heritability estimates, especially when a number of annotation categories are related to the repressed or non-functional genome. GNOVA ignores negative hertiability estimates, leaving the correlation estimates as 'NaN'. So, we recommend the users to focus on genetic covariance instead of genetic correlation when performing annotation-stratified analysis.
 
 ## Credits
 Those using the GNOVA software should cite:
