@@ -95,6 +95,9 @@ def prep(bfile, annot, sumstats1, sumstats2):
                                    a], axis=1)
             annots[i].rename(columns={0: 'ALL_'}, inplace=True)
         to_drop = [annot_names[i] for i, x in enumerate(has_zeroes) if not x]
+        if len(to_drop) > 0:
+            print('The following annotations will not be considered because '
+                  'they include all SNPs: {}'.format(to_drop))
         for i, df in enumerate(annots):
             annots[i] = df.drop(to_drop, axis=1).reset_index(drop=True)
 
