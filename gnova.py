@@ -43,7 +43,7 @@ def pipeline(args):
         print('Calculating LD scores...')
         ld_scores = ldscore(args.bfile, annots, gwas_snps, args.save_ld)
     print('Calculating correlation...')
-    out = calculate(gwas_snps, ld_scores, annots, N1, N2)
+    calculate(gwas_snps, ld_scores, annots, N1, N2)
     print('\nFinal results:\n{}\n'.format(out))
     print('\nView ldsc.log for verbose output.')
     out.insert(0, 'annot_name', out.index)
@@ -82,4 +82,4 @@ if __name__ == '__main__':
     if sys.version_info[0] != 2:
         print('ERROR: GNOVA does not run on Python 3. Please run it on Python 2.7.x.')
         sys.exit(1)
-    out = pipeline(parser.parse_args())
+    pipeline(parser.parse_args())
