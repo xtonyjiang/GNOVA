@@ -43,7 +43,7 @@ def pipeline(args):
         print('Calculating LD scores...')
         ld_scores = ldscore(args.bfile, annots, gwas_snps, args.save_ld)
     print('Calculating correlation...')
-    calculate(gwas_snps, ld_scores, annots, N1, N2)
+    out = calculate(gwas_snps, ld_scores, annots, N1, N2)
     print('\nFinal results:\n{}\n'.format(out))
     print('\nView ldsc.log for verbose output.')
     out.insert(0, 'annot_name', out.index)

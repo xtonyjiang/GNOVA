@@ -9,7 +9,7 @@ from scipy.stats import norm
 from numpy.linalg import inv
 
 def calculate(gwas_snps, ld_scores, annots, N1, N2):
-    np.seterr(invalid='warn')
+    np.seterr(invalid='ignore')
 
     ###   Clean up data   ###
     if annots is None:
@@ -109,6 +109,9 @@ def calculate(gwas_snps, ld_scores, annots, N1, N2):
     # genetic correlation
     corr = rho / ((h2_1 * h2_2) ** 0.5).T
     corr_corrected = rho_corrected / ((h2_1 * h2_2) ** 0.5).T
+    if np.isnan(corr).any() or np.isnan(corr_corrected).any():
+        print('Some correlation estimates are NaN because the heritability '
+              'estimates were negative.')
 
     # p-value
     p_value = norm.sf(abs(rho / (cov_rho.diagonal() ** 0.5))) * 2
