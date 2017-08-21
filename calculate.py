@@ -113,13 +113,15 @@ def calculate(gwas_snps, ld_scores, annots, N1, N2):
         print('Some correlation estimates are NaN because the heritability '
               'estimates were negative.')
 
-    # p-value
-    p_value = norm.sf(abs(rho / (cov_rho.diagonal() ** 0.5))) * 2
-    p_value_corrected = norm.sf(abs(rho_corrected / (cov_rho.diagonal() ** 0.5))) * 2
+    # p-value and standard error
+    se_rho = cov_rho.diagonal() ** 0.5
+    p_value = norm.sf(abs(rho / se_rho)) * 2
+    p_value_corrected = norm.sf(abs(rho_corrected / se_rho)) * 2
 
     out = pd.DataFrame(collections.OrderedDict(
         [('rho', rho),
          ('rho_corrected', rho_corrected),
+         ('se_rho', se_rho),
          ('pvalue', p_value),
          ('pvalue_corrected', p_value_corrected),
          ('corr', corr[0]),
@@ -145,3 +147,4 @@ def calculate(gwas_snps, ld_scores, annots, N1, N2):
               'the results for these annotations as "NA" in the output.')
 
     return out
+

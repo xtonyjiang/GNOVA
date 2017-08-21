@@ -61,6 +61,7 @@ The output will be a whitespace-delimited text file, with the rows corresponding
 - `annot_name:` The name of the annotation.
 - `rho:` The genetic covariance estimate.
 - `rho_corrected:` The genetic covariance estimate with sample overlap correction.
+- `se_rho:` The standard error of the estimate of `rho`.
 - `pvalue:` The p-value from the statistical test for genetic covariance.
 - `pvalue_corrected:` The p-value from the statistical test for genetic covariance with sample overlap correction.
 - `corr`: The genetic correlation estimate.
