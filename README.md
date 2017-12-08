@@ -74,7 +74,7 @@ NOTE: When functional annotations are present, the true heritability in each ann
 ## Credits
 Those using the GNOVA software should cite:
 
-[Lu, et al. A powerful approach to estimating annotation-stratified genetic covariance using GWAS summary statistics. bioRxiv, 2016.](http://biorxiv.org/content/early/2017/03/07/114561)
+[Lu, et al. A powerful approach to estimating annotation-stratified genetic covariance using GWAS summary statistics. The American Journal of Human Genetics, Volume 101, Issue 6, 939 - 964, 2016.](http://www.cell.com/ajhg/abstract/S0002-9297(17)30453-6)
 
 The LD score calculation is adapted from `ldsc`. See
 [Bulik-Sullivan, et al. LD Score Regression Distinguishes Confounding from Polygenicity in Genome-Wide Association Studies.
