@@ -16,9 +16,9 @@ Suppose you would like to calculate genetic covariance between Crohn's Disease a
 
 - **Summary statistics files:** You can get your own GWAS summary statistics files for these two diseases [here](https://www.ibdgenetics.org). We assume that the files are in the standard format that `ldsc` understands. If not, make sure to run them through the included `munge_sumstats.py` file, or use the one included in `ldsc` (see [here](https://github.com/bulik/ldsc/wiki/Heritability-and-Genetic-Correlation#reformatting-summary-statistics) for instructions).
 
-- **Plink bfiles:** These are files .bed/.bim/.fam format. You can download some that we have prepared for you [here](http://genocanyon.med.yale.edu/GNOVAFiles/genotype_1KG_eur_SNPmaf5.tar.gz). These files are from the 1000 Genomes Project, with rare variants (MAF < 5%) filtered out.
+- **Plink bfiles:** These are files .bed/.bim/.fam format. You can download some that we have prepared for you [here](https://drive.google.com/open?id=18RQvQc7wjudQFlB2CSDqvBptMjbxlYuU&usp=drive_copy). These files are from the 1000 Genomes Project, with rare variants (MAF < 5%) filtered out.
 
-- **Annotation files:** These are only necessary if you are doing annotation-stratified analysis. You can download some example annotation files that we have prepared for you [here](http://genocanyon.med.yale.edu/GNOVAFiles/annotations.tar.gz). There are three different types of annotation files here:
+- **Annotation files:** These are only necessary if you are doing annotation-stratified analysis. You can download some example annotation files that we have prepared for you [here](https://drive.google.com/open?id=18RQvQc7wjudQFlB2CSDqvBptMjbxlYuU&usp=drive_copy). There are three different types of annotation files here:
     - **annot_GenoCanyon:** Predicted functional and non-functional SNPs based on GenoCanyon annotations.
     - **annot_MAF:** Minor allele frequency quartiles based on samples from the 1000 Genomes Project with European ancestry.
     - **annot_GSplus7tissues:** Seven broadly-defined tissue categories based on GenoSkyline-Plus annotations.
